@@ -1,0 +1,17 @@
+#!/bin/bash
+# pantheon_commit_and_quick_deploy.sh
+# Commit to Git and deploy everything on dev straight to live.
+
+if [ "$#" != 2 ]; then
+  echo "Usage: $0 [site name] [commit and deployment message]"
+  exit 1;
+fi
+
+git commit -m"$2"
+if [ "$?" != 0 ]; then
+  echo "The commit failed.  Did you forget to add the files?"
+  exit 2;
+fi
+
+git push
+pantheon-quick-deploy.sh $1 "$2"

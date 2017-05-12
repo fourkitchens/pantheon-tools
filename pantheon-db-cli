@@ -1,0 +1,49 @@
+#!/bin/bash
+# terminus-db-cli
+# Get a MySQL commandline on a Pantheon server that requires an SSH tunnel.
+
+if [[ $# -lt 2 ]] ; then
+>&2  echo -e 'Usage:'
+>&2  echo -e '  terminus-db-cli [site] [environment]'
+>&2  echo -e ' [site] - The name of a Pantheon site.  E.g. aclu-d7'
+>&2  echo -e ' [environment] - An environment for that site.  E.g. dev'
+  exit 0
+fi
+
+connection_info=`terminus connection:info $1.$2 --fields=mysql_port,git_port,sftp_username,mysql_host,mysql_username,mysql_password,mysql_database --format=print-r`
+
+if [ $? -ne 0 ]; then
+>&2  echo -e 'FAILURE. Please ensure that you can run this command successfully:'
+>&2  echo -e ' terminus site connection-info'
+  exit 1;
+fi
+
+mysql_port=`echo -e "$connection_info" | grep mysql_port | awk '{print $3}'`
+git_port=`echo -e "$connection_info" | grep git_port | awk '{print $3}'`
+if [ -z "$git_port" ]; then
+  git_port=2222
+fi
+sftp_username=`echo -e "$connection_info" | grep sftp_username | awk '{print $3}'`
+mysql_host=`echo -e "$connection_info" | grep mysql_host | awk '{print $3}'`
+mysql_username=`echo -e "$connection_info" | grep mysql_username | awk '{print $3}'`
+mysql_password=`echo -e "$connection_info" | grep mysql_password | awk '{print $3}'`
+mysql_database=`echo -e "$connection_info" | grep mysql_database | awk '{print $3}'`
+
+# First "Wake up" the server.
+>&2 echo -e "--Now waking up the server.--"
+terminus env:wake $1.$2
+
+# Open the SSH connection.
+>&2 echo -e "--Now opening the SSH connection.--"
+#echo "ssh -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host"
+ssh -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host
+
+#Transfer the Database.
+>&2 echo -e "--Now opening MySQL CLI.--"
+#echo "mysql -u$mysql_username -h127.0.0.1 -P$mysql_port -p$mysql_password $mysql_database"
+mysql --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database
+
+# Kill the SSH session.
+>&2 echo -e "--Now cleaning up the SSH connection.--"
+ps -fU $USER | grep "ssh -f" | grep "@dbserver" | awk '{print $2}' | xargs kill
+
