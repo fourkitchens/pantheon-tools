@@ -1,10 +1,10 @@
 #!/bin/bash
-# terminus-db-cli
+# pantheon-db-cli
 # Get a MySQL commandline on a Pantheon server that requires an SSH tunnel.
 
 if [[ $# -lt 2 ]] ; then
 >&2  echo -e 'Usage:'
->&2  echo -e '  terminus-db-cli [site] [environment]'
+>&2  echo -e "  $(basename $0) [site] [environment]"
 >&2  echo -e ' [site] - The name of a Pantheon site.  E.g. aclu-d7'
 >&2  echo -e ' [environment] - An environment for that site.  E.g. dev'
   exit 0

@@ -1,10 +1,10 @@
 #!/bin/bash
-# terminus-db-dump
+# pantheon-db-dump
 # Dump a DB from a Pantheon environment.
 
 if [[ $# -lt 2 ]] ; then
 >&2  echo -e 'Usage:'
->&2  echo -e '  terminus-db-dump [site] [environment] | drush sql-cli'
+>&2  echo -e "  $(basename $0) [site] [environment] | drush sql-cli"
 >&2  echo -e ' [site] - The name of a Pantheon site.  E.g. aclu-d7'
 >&2  echo -e ' [environment] - An environment for that site.  E.g. dev'
 >&2  echo -e ' The drush command may require `@something.local` or `-l foo.dev` or whatever you usually use to help it connect to the right database.'

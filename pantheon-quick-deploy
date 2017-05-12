@@ -1,9 +1,9 @@
 #!/bin/bash
-# pantheon_quick_deploy.sh
+# pantheon_quick_deploy
 # Deploy everything on dev straight to live.
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage: pantheon_quick_deploy.sh [site name] [optional deployment message]"
+  echo "Usage: $(basename $0) [site name] [optional deployment message]"
   exit 1;
 fi
 

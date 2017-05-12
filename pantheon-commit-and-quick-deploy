@@ -1,9 +1,9 @@
 #!/bin/bash
-# pantheon_commit_and_quick_deploy.sh
+# pantheon_commit_and_quick_deploy
 # Commit to Git and deploy everything on dev straight to live.
 
 if [ "$#" != 2 ]; then
-  echo "Usage: $0 [site name] [commit and deployment message]"
+  echo "Usage: $(basename $0) [site name] [commit and deployment message]"
   exit 1;
 fi
 
