@@ -14,4 +14,4 @@ if [ "$?" != 0 ]; then
 fi
 
 git push
-pantheon-quick-deploy.sh $1 "$2"
+pantheon-quick-deploy $1 "$2"
