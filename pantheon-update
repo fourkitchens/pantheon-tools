@@ -379,7 +379,6 @@ multidev_merge() {
       exit 0;
       ;;
     *)
-      # @todo abstract this part so that it can be run on any env., with any framework.
       echo -e "Merging ${SITENAME}.${MDENV} to dev."
       terminus -q env:wake ${SITENAME}.dev
       terminus -q multidev:merge-to-dev ${SITENAME}.${MDENV}
@@ -387,11 +386,26 @@ multidev_merge() {
         cleanup_on_error "Error merging to dev." 13
       fi
       echo -e "Clearing caches."
-      terminus -q drush ${SITENAME}.dev -- cache-clear all
-      echo -e "Updating the database."
-      terminus -q drush ${SITENAME}.dev -- updatedb -y
-      echo -e "Reverting Features."
-      terminus -q drush ${SITENAME}.dev -- features-revert-all -y
+      terminus -q env:clear-cache ${SITENAME}.dev
+      # @todo abstract this part so that it can be run on any env., with any framework.
+      case $FRAMEWORK in
+        drupal)
+          echo -e "Updating the database."
+          terminus -q drush ${SITENAME}.dev -- updatedb -y
+          echo -e "Reverting Features."
+          terminus -q drush ${SITENAME}.dev -- features-revert-all -y
+          ;;
+        *)
+          # wordpress and drupal8
+          echo -e "$FRAMEWORK is not yet supported.  Do whatever it is that you do to update the database and revert configuration the dev site, then continue."
+          echo -e "  http://dev-${SITENAME}.pantheonsite.io/"
+          read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+          case $continue in
+            [Nn]) cleanup_on_error "" 0 ;;
+            *) ;;
+          esac
+          ;;
+      esac
       ;;
   esac
 }
