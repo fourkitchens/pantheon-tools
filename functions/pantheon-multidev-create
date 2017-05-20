@@ -1,0 +1,87 @@
+#!/bin/bash
+# pantheon-choose-site
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+
+###
+# Create a multi-dev.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $FRAMEWORK
+#   The framework of the site.
+# @param string $SUGGESTED_MULTIDEV
+#   The suggested name of the multidev to create.
+# @param string $MULTIDEV
+#   Will be overwritten with the machine name of the multidev that was created
+#   or chosen.
+###
+multidev_create() {
+  local sitename=$1
+  local framework=$2
+  local sugested_multidev=$3
+  local multidev=''
+  local charlength=0
+  local from_env_default=''
+  local from_env=''
+  echo -e "Updating ${framework} site ${sitename}."
+
+  while true; do
+    read -p "${UNDERLINE}What should the multidev be called. You may use the name of an existing branch. [${BOLD}${sugested_multidev}${NOBOLD}]? ${NOUNDERLINE}"  multidev
+    multidev="${multidev:-$sugested_multidev}"
+
+    # Validate that it's fewer than 12 chars (Pantheon's limit for multi-devs).
+    charlength=${#multidev}
+
+    if [ $charlength -lt 12 ]; then
+      break;
+    fi;
+    >&2 echo -e "${INVERSE}Multidev name must be fewer than 12 characters.  Yours was ${charlength}.  Try again.${NOINVERSE}"
+  done;
+
+  # @todo Make this happen.  We'll also need to determine the framework.
+  #echo -e "Pro tip:"
+  #echo -e "To get to this point directly, just use arguments."
+  #echo -e "  ./pantheon-update.sh ${sitename} ${multidev}"
+  #echo -e ""
+
+  terminus -q env:info ${sitename}.${multidev}
+  if [ $? != 0 ]; then
+    echo -e "Creating multidev enironment $multidev"
+    from_env_default='live'
+    read -p "${UNDERLINE}Use the db/files from which environment? (dev/test/${BOLD}live${NOBOLD}) ${NOUNDERLINE}"  from_env
+    from_env="${from_env:-$from_env_default}"
+    # @todo error check that it's a valid choice.
+    terminus -q env:wake ${sitename}.${from_env}
+    echo -e "${PROTIP}The git branch is created early.  If you need to use this locally, you can probably already do so."
+    echo -e "Creating multidev ${multidev} from ${from_env}.  Please wait (this can take a long time)..."
+    terminus -q multidev:create ${sitename}.${from_env} ${multidev}
+    if [ $? != 0 ]; then
+      >&2 echo -e "Error: Could not create multidev."
+      exit 5;
+    fi
+  else
+    echo -e "Multidev environment $multidev already exists and will be used for the rest of the procedure."
+    from_env_default='none'
+    read -p "${UNDERLINE}Copy db from which environment? (dev/test/live/${BOLD}none${NOBOLD}/quit)${NOUNDERLINE} " from_env
+    from_env="${from_env:-$from_env_default}"
+    # @todo error check that it's a valid choice.
+    case $from_env in
+      quit) exit 0;;
+      none) ;;
+      *)
+        terminus -q env:wake ${sitename}.${from_env}
+        echo -e "Copying DB from ${sitename}.${from_env} to ${multidev}.  Please wait (this can take a long time)..."
+        terminus -y -q env:clone-content ${sitename}.${from_env} ${multidev}
+        if [ $? != 0 ]; then
+          cleanup_on_error $sitename $multidev "error cloning content from ${from_env} to ${multidev}" 6
+        fi
+        ;;
+    esac
+  fi
+  eval "$4='$multidev'"
+}

@@ -1,0 +1,17 @@
+#!/bin/bash
+# pantheon-choose-site
+
+###
+# Get the framework for the given site
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param string $MULTIDEV_URL
+#   Will be overwritten with the URL to the multidev environment.
+###
+get_multidev_url() {
+  local multidev_url="http://${2}-${1}.pantheonsite.io/"
+  eval "$3='$multidev_url'"
+}

@@ -1,0 +1,50 @@
+#!/bin/bash
+# pantheon-choose-site
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-get_multidev_url"
+
+##
+# Delete the multi-dev.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param int $skip_continue_message
+#  Set to 1 to skip the message that suggests running the script again with the same multidev.
+##
+multidev_delete() {
+  local sitename=$1
+  local multidev=$2
+  local multidev_url=''
+  get_multidev_url $sitename $multidev multidev_url
+  if [ "$3" != 1 ]; then
+    echo -e "The URL for the multidev environment is:"
+    echo -e "  $multidev_url"
+    echo -e "${UNDERLINE}Delete multidev $multidev?${NOUNDERLINE}"
+    echo -e "(If you leave it you will be able to run the script again using it.)"
+  else
+    echo -e "${UNDERLINE}Delete multidev $multidev?${NOUNDERLINE}"
+  fi
+  read -p "[${BOLD}y${NOBOLD}]es [n]o? [${BOLD}y${NOBOLD}/n] " cleanup;
+  case $cleanup in
+    [Nn]) ;;
+    *)
+      if [ "$1" != 1 ]; then
+        read -p "${UNDERLINE}Delete the branch too? [y/${BOLD}n${NOBOLD}]${NOUNDERLINE} " delete_branch;
+        case $delete_branch in
+          [Yy]) terminus -q multidev:delete ${sitename}.${multidev} --delete-branch ;;
+          *) terminus -q multidev:delete ${sitename}.${multidev} ;;
+        esac
+      else
+        # Assume that we're skipping continue messages because the merge was
+        # successful.  So don't even offer to delete the branch.
+        terminus -q multidev:delete ${sitename}.${multidev}
+      fi
+      ;;
+  esac
+}

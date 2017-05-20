@@ -1,0 +1,29 @@
+#!/bin/bash
+# pantheon-choose-site
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-multidev-delete"
+
+##
+# If there was an error, ask to remove the multi-dev. Then exit.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param string $message
+#   The message to display.
+# @param int $return_code
+#   What return code to send.
+##
+cleanup_on_error() {
+  >&2 echo -e ""
+  >&2 echo -e "${INVERSE}ERROR:"
+  >&2 echo -e "$3${NOINVERSE}"
+  >&2 echo -e ""
+  multidev_delete $1 $2
+  exit "$4";
+}

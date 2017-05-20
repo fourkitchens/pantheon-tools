@@ -1,0 +1,17 @@
+#!/bin/bash
+# pantheon-choose-site
+
+###
+# Get the framework for the given site
+#
+# @param string $SITENAME
+#   The machine name of the site to check.
+# @param string $FRAMEWORK
+#   Will be overwritten with the framework of the given site.
+###
+get_framework() {
+  local framework=''
+  framework=`terminus site:info --field=framework $1`
+  echo $framework
+  eval "$2='$framework'"
+}

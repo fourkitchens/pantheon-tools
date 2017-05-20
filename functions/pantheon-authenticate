@@ -1,0 +1,28 @@
+#!/bin/bash
+# pantheon-authenticate
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+
+##
+# Authenticate with Terminus.
+##
+terminus_authenticate() {
+  whoami=`terminus auth:whoami`
+  if [ "$whoami" == "" ]; then
+    echo -e "You are not authenticated with Terminus..."
+    terminus auth:login
+    if [ $? == 0 ]; then
+      echo -e "Login successful!"
+    else
+      echo "${INVERSE}Login failed. Please re-run the script and try again.${NOINVERSE}"
+      exit 2
+    fi
+  else
+    echo -e "You are authenticated with Terminus as:"
+    echo -e " $whoami"
+    echo -e "${UNDERLINE}To log in as someone else, run \`terminus auth:login\` before running this script. ${NOUNDERLINE}"
+  fi
+}

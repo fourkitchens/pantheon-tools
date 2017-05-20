@@ -1,0 +1,27 @@
+#!/bin/bash
+# pantheon-choose-site
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+
+##
+# Checks that Terminus is installed.
+#
+# @param string $SITENAME
+#   Will be overwritten with the machine name of the chosen site.
+##
+choose_site() {
+  terminus site:list --fields="name,id,framework"
+  while true; do
+    local sitename=''
+    read -p "${UNDERLINE}Type in site name and press [Enter] to start updating:${NOUNDERLINE} " sitename
+    terminus -q site:lookup $sitename
+    if [ $? = 0 ]; then
+      eval "$1='$sitename'"
+      return;
+    fi;
+    >&2 echo -e "${INVERSE}Site $localsitename could not be found.  Try again.${NOINVERSE}"
+  done;
+}
