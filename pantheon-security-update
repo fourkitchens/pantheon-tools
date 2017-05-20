@@ -293,26 +293,24 @@ multidev_merge() {
 
 #set -x
 
-#terminus_check
-#terminus_authenticate
-#SITENAME=''
-#choose_site SITENAME
-SITENAME=heron
-#FRAMEWORK=''
-#get_framework $SITENAME FRAMEWORK
-FRAMEWORK=drupal
+terminus_check
+terminus_authenticate
+SITENAME=''
+choose_site SITENAME
+#SITENAME=heron
+FRAMEWORK=''
+get_framework $SITENAME FRAMEWORK
+#FRAMEWORK=drupal
 SUGGESTED_MULTIDEV='sec'`date "+%Y%m%d"`
 MULTIDEV=''
 multidev_create $SITENAME $FRAMEWORK $SUGGESTED_MULTIDEV MULTIDEV
-echo -e $MULTIDEV
 #MULTIDEV=sec20170301
 MULTIDEV_URL=''
 get_multidev_url $SITENAME $MULTIDEV MULTIDEV_URL
-echo -e $MULTIDEV_URL
-multidev_connection_mode sftp
+multidev_connection_mode 'sftp'
 multidev_update
 #DRUSH_VERSION=7
-multidev_connection_mode git
+multidev_connection_mode 'git'
 multidev_merge
 multidev_delete $SITENAME $MULTIDEV 1
 echo -e "${UNDERLINE}Sorry, the deploying and backup part hasn't been written yet. Use the Pantheon dashboard. But also run \`drush cc all\`, \`drush updb\`, and \`drush fra\`${NOUNDERLINE}"
