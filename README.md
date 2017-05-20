@@ -31,7 +31,7 @@ pantheon-update
 
 ## Scripts
 
-### pantheon-update
+### pantheon-security-update
 
 Run security updates on a Pantheon site by first creating a new multi-dev environment.
 
