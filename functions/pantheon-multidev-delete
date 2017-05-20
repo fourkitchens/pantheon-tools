@@ -34,7 +34,7 @@ multidev_delete() {
   case $cleanup in
     [Nn]) ;;
     *)
-      if [ "$1" != 1 ]; then
+      if [ "$3" != 1 ]; then
         read -p "${UNDERLINE}Delete the branch too? [y/${BOLD}n${NOBOLD}]${NOUNDERLINE} " delete_branch;
         case $delete_branch in
           [Yy]) terminus -q multidev:delete ${sitename}.${multidev} --delete-branch ;;
