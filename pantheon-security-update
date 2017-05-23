@@ -1,5 +1,5 @@
 #!/bin/bash
-# pantheon-update
+# pantheon-security-update
 # Bash script to run security updates on a Pantheon site.
 
 # Include all of the subscripts that we need.
@@ -13,281 +13,70 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-multidev-create"
 . "$DIR/functions/pantheon-cleanup-on-error"
 . "$DIR/functions/pantheon-multidev-delete"
-. "$DIR/functions/pantheon-get_multidev_url"
+. "$DIR/functions/pantheon-get-multidev-url"
+. "$DIR/functions/pantheon-connection-mode"
+. "$DIR/functions/drupal/drupal-get-drush-version"
+. "$DIR/functions/drupal/drupal-check-features"
+. "$DIR/functions/drupal/drupal-regenerate-features"
 
-##
-# Set the connection mode for the multi-dev env.
+###
+# Run security updates.
 #
-# @param string $mode
-#   Either "sftp" or "git"
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $FRAMEWORK
+#   The framework of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
 ##
-multidev_connection_mode() {
-  echo -e "Switching to $1 connection-mode..."
-  terminus -q connection:set ${SITENAME}.${MULTIDEV} $1
-  if [ $? = 1 ]; then
-    cleanup_on_error $SITENAME $MULTIDEV "error in switching to $1" 7
-  fi
-}
-
-###
-# Run updates.
-###
 multidev_update() {
-  case $FRAMEWORK in
+  local sitename=$1
+  local framework=$2
+  local multidev=$3
+  local multidev_url=''
+  get_multidev_url $sitename $multidev multidev_url
+
+  case $framework in
     drupal)
-      drupal_set_drush_version
-      drupal_check_features
-      # @todo add an option to skip security updates.  i.e. Just regenerate the
-      # features, and deploy
-      drupal_update
-      drupal_regenerate_features
+      local drush_version=''
+      drupal_get_drush_version $sitename $multidev drush_version
+      local has_features=''
+      drupal_check_features $sitename $multidev has_features
+      drupal_update $sitename $multidev
+      if [ "$has_features" == 1 ]; then
+        drupal_regenerate_features $sitename $multidev
+      fi
       ;;
     *)
       # wordpress and drupal8
       # @link https://github.com/pixotech/Pantheon-Updates/blob/master/pantheon-update.sh#L38
-      echo -e "$FRAMEWORK is not yet supported.  Do whatever it is that you do to run security updates on the multi-site, then continue."
-      echo -e "  $MULTIDEV_URL"
+      echo -e "$framework is not yet supported.  Do whatever it is that you do to run security updates on the multi-site, then continue."
+      echo -e "  $multidev_url"
       read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
       case $continue in
-        [Nn]) cleanup_on_error $SITENAME $MULTIDEV "" 0 ;;
+        [Nn])
+          echo -e "You may run the \`pantheon-merge\` script when you are ready to merge and deploy."
+          exit 0
+          ;;
         *) ;;
       esac
       ;;
   esac
-}
 
-###
-# Determine Drush version.
-#
-# @global $DRUSH_VERSION
-###
-drupal_set_drush_version() {
-  echo -e "Determining the drush version."
-  echo -e "${UNDERLINE}You may be asked if you wish to continue connecting.  Say yes.${NOUNDERLINE}"
-  DRUSH_VERSION=`terminus drush ${SITENAME}.${MULTIDEV} -- --version --pipe 2>/dev/null | cut -c-1`
-  if [ "$DRUSH_VERSION" -lt 6 ]; then
-    cleanup_on_error $SITENAME $MULTIDEV "The site needs to run Drush 7 for Drupal 7, Drush 8 for Drupal 8.  See https://pantheon.io/docs/drush-versions/" 12
-  fi
-}
-
-###
-# Check that features are not overridden.
-#
-# @global $HAS_FEATURES
-###
-drupal_check_features() {
-  echo -e "Checking if Features module is installed."
-  drupal_check_if_module_installed features
-  if [ $? == 0 ]; then
-    HAS_FEATURES=0
-    return;
-  fi
-  HAS_FEATURES=1
-  echo -e "Checking that features are not overridden."
-  overridden=`terminus drush ${SITENAME}.${MULTIDEV} features-list 2>/dev/null | fgrep Overridden`
-  if [ "$overridden" != "" ]; then
-    echo -e "$overridden"
-    cleanup_on_error $SITENAME $MULTIDEV "There are features overrides.  These should be cleaned up first." 8
-  fi
-}
-
-##
-# List all modules that need a security update.
-##
-drupal_update_list_modules_needing_update() {
-  echo -e "Checking which modules need an update."
-  terminus drush ${SITENAME}.${MULTIDEV} pm-updatestatus -- --security-only 2>&1 | fgrep -v '[notice]'
-}
-
-##
-# Check if the given module is installed.
-#
-# @param string $module_name
-##
-drupal_check_if_module_installed() {
-  installed=`terminus drush ${SITENAME}.${MULTIDEV} pm-list -- --status=enabled --pipe 2>/dev/null | fgrep $1`
-  if [ "$installed" != "" ]; then
-    return 1;
-  fi
-}
-
-###
-# Update a Drupal site.
-###
-drupal_update() {
-
-  echo -e "Checking Update Status Advanced."
-  drupal_check_if_module_installed update_advanced
-  if [ $? == 1 ]; then
-    # @todo Either rectify this, or switch to drush locks.
-    echo -e ""
-    echo -e "${BOLD}This tool is not yet smart enough to understand modules locked by Update Status Advanced module."
-    echo -e "${BOLD}Be sure to check this URL to see if any of the modules reported below are excluded for some reason:"
-    echo -e "${BOLD}  http://live-${SITENAME}.pantheonsite.io/admin/reports/updates/settings"
-    echo -e "${BOLD}Adjust those rules if necessary (maybe the most recent version needs to be ignored), and disregard the list below.  Instead use the report at:"
-    echo -e "${BOLD}  http://live-${SITENAME}.pantheonsite.io/admin/reports/updates${NOBOLD}"
-  fi
-
-  terminus -q drush ${SITENAME}.${MULTIDEV} -- rf -q
-  drupal_update_list_modules_needing_update
-  echo -e ""
-  echo -e "${BOLD}Remember that our security update policy does not include:${NOBOLD}"
-  echo -e "* Jumps to a new major version."
-  echo -e "  e.g. 7.x-2.4 to 7.x-3.0"
-  echo -e "* Upgrading an alpha or dev module."
-  echo -e "  e.g. 7.x-1.0-alpha3 to 7.x-1.0-beta2"
-  echo -e "These should be done as billable work."
-
-  # @todo It would require less interaction if we did this a bit differently:
-  #       1. Build a list of all the modules that we want to update.
-  #       2. Update them one by one.  After each we ask for a commit message, as
-  #          long as the user doesn't see any error messages.
-  #       3. Ask the user to test the site.
-  while true; do
-    echo -e ""
-    echo -e "${UNDERLINE}Enter one of the following:${NOUNDERLINE}"
-    echo -e "* The machine-name of a module to update."
-    echo -e "* 'list' to show the list again."
-    echo -e "* 'none' to move on to the next step."
-    read -p "? " command;
-    case $command in
-      none) break ;;
-      list) drupal_update_list_modules_needing_update ;;
-      *)
-        if [ "$command" != "" ]; then
-          drupal_update_module $command
-          multidev_commit "Security update for $command module."
-        fi
-        ;;
-    esac
-  done;
-}
-
-##
-# Update the given module to the latest stable version.
-#
-# @param string $module_name
-##
-drupal_update_module() {
-  drupal_check_if_module_installed $1
-  if [ $? == 0 ]; then
-    echo "${INVERSE}Module $1 does not exist.${NOINVERSE}"
-    return;
-  fi
-
-  echo "Updating the code for $1..."
-  terminus -q drush ${SITENAME}.${MULTIDEV} -- pm-updatecode --no-backup $1 -y
-  if [ $? != 0 ]; then
-    cleanup_on_error $SITENAME $MULTIDEV"error updating the code to the latest version." 9
-  fi
-
-  echo "Updating the database for $1..."
-  terminus -q drush ${SITENAME}.${MULTIDEV} -- updatedb -y
-  if [ $? != 0 ]; then
-    cleanup_on_error $SITENAME $MULTIDEV "error updating the database." 10
-  fi
-
-  echo -e "${BOLD}$1 has been updated. Please test it here:${NOBOLD}"
-  echo -e "  $MULTIDEV_URL"
-  echo -e ""
-  echo -e "Some things you might need to check:"
-  echo -e "* Check site functionality related to these module."
-  echo -e "* Check for custom code that integrates with the updated module."
-  echo -e "* Check for any patches for the module in sites/all/hacks."
-  echo -e ""
-  echo -e "${UNDERLINE}Continue with the process (committing the code)?${NOUNDERLINE}"
-  read -p "${UNDERLINE}[${BOLD}y${NOBOLD}]es [n]o, I'll re-run the script later. [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
-  case $continue in
-    [Nn] ) exit 0 ;;
-    *) ;;
-  esac
-}
-
-##
-# Commit code in the multi-dev.
-#
-# @param string $default_commit_message
-##
-multidev_commit() {
-  # Need to clear the cache before committing, otherwise it may not recognize
-  # that files have changed.
-  terminus -q env:clear-cache ${SITENAME}.${MULTIDEV}
-  read -p "${UNDERLINE}Please provide git commit message [${BOLD}$1${NOBOLD}]:${NOUNDERLINE} " message
-  message="${message:-$1}"
-  terminus -q env:commit ${SITENAME}.${MULTIDEV} --message="$message"
-  if [ $? != 0 ]; then
-    cleanup_on_error $SITENAME $MULTIDEV "Error committing to git." 11
-  fi
-}
-
-##
-# Check if features need to be regenerated.
-##
-drupal_regenerate_features() {
-  if [ "$HAS_FEATURES" == 0 ]; then
-    return;
-  fi
-  echo -e "Clearing caches."
-  terminus -q drush ${SITENAME}.${MULTIDEV} -- cache-clear all
-  echo -e "Checking if features need to be regenerated."
-  overridden=`terminus drush ${SITENAME}.${MULTIDEV} features-list 2>/dev/null | fgrep Overridden`
-  if [ "$overridden" != "" ]; then
-    echo -e "Regenerating these features:"
-    echo -e "$overridden"
-    terminus -q drush ${SITENAME}.${MULTIDEV} -- features-update-all -y
-    if [ $? != 0 ]; then
-      cleanup_on_error $SITENAME $MULTIDEV "Error regenerating features." 12
-    fi
-    multidev_commit "Regenerated features."
-  fi
-}
-
-##
-# Merge the multi-dev to the dev site.
-##
-multidev_merge() {
   echo -e ""
   echo -e "${UNDERLINE}Do you wish to merge this multidev into the dev environment?${NOUNDERLINE}"
   echo -e "Some common cases where you shouldn't:"
-  echo -e "* If the client should review."
+  echo -e "* If this was a wide-reacing change, and you are not familiar enough with the site to know if things are broken or not.  If so, then get the client to review."
   echo -e "* If deployments are always done in batches (e.g. Annenberg) and this should be included in the next batch."
   # @todo check for this.
-  echo -e "* If there is undeployed code on dev (in the future, could be added to the automation)."
-  read -p "${UNDERLINE}Merge?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " merge;
-  case $merge in
+  echo -e "* If there is undeployed code on the dev environment."
+  read -p "${UNDERLINE}Merge?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+  case $continue in
     [Nn])
-      echo -e "You may run this script again when you are ready to merge and deploy."
-      exit 0;
+      echo -e "You may run the \`pantheon-merge\` script when you are ready to merge and deploy."
+      exit 0
       ;;
-    *)
-      echo -e "Merging ${SITENAME}.${MULTIDEV} to dev."
-      terminus -q env:wake ${SITENAME}.dev
-      terminus -q multidev:merge-to-dev ${SITENAME}.${MULTIDEV}
-      if [ $? != 0 ]; then
-        cleanup_on_error $SITENAME $MULTIDEV "Error merging to dev." 13
-      fi
-      echo -e "Clearing caches."
-      terminus -q env:clear-cache ${SITENAME}.dev
-      # @todo abstract this part so that it can be run on any env., with any framework.
-      case $FRAMEWORK in
-        drupal)
-          echo -e "Updating the database."
-          terminus -q drush ${SITENAME}.dev -- updatedb -y
-          echo -e "Reverting Features."
-          terminus -q drush ${SITENAME}.dev -- features-revert-all -y
-          ;;
-        *)
-          # wordpress and drupal8
-          echo -e "$FRAMEWORK is not yet supported.  Do whatever it is that you do to update the database and revert configuration the dev site, then continue."
-          echo -e "  http://dev-${SITENAME}.pantheonsite.io/"
-          read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
-          case $continue in
-            [Nn]) cleanup_on_error $SITENAME $MULTIDEV "" 0 ;;
-            *) ;;
-          esac
-          ;;
-      esac
-      ;;
+    *) ;;
   esac
 }
 
@@ -301,18 +90,21 @@ choose_site SITENAME
 FRAMEWORK=''
 get_framework $SITENAME FRAMEWORK
 #FRAMEWORK=drupal
+
 SUGGESTED_MULTIDEV='sec'`date "+%Y%m%d"`
 MULTIDEV=''
 multidev_create $SITENAME $FRAMEWORK $SUGGESTED_MULTIDEV MULTIDEV
 #MULTIDEV=sec20170301
 MULTIDEV_URL=''
 get_multidev_url $SITENAME $MULTIDEV MULTIDEV_URL
-multidev_connection_mode 'sftp'
+
+connection_mode $SITENAME $MULTIDEV 'sftp'
 multidev_update
-#DRUSH_VERSION=7
-multidev_connection_mode 'git'
-multidev_merge
+connection_mode $SITENAME $MULTIDEV 'git'
+
+multidev_merge $SITENAME $FRAMEWORK $MULTIDEV
 multidev_delete $SITENAME $MULTIDEV 1
+
 echo -e "${UNDERLINE}Sorry, the deploying and backup part hasn't been written yet. Use the Pantheon dashboard. But also run \`drush cc all\`, \`drush updb\`, and \`drush fra\`${NOUNDERLINE}"
 echo -e
 echo -e "Thanks.  All done."

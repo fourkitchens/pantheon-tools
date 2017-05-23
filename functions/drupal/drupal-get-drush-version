@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+  . "$FUNCTIONS_DIR/pantheon-script-colours"
+  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+fi
+
+###
+# Determine Drush version.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param $DRUSH_VERSION
+#   Will be overwritten with the major version of drush.
+###
+drupal_get_drush_version() {
+  echo -e "Determining the drush version."
+  echo -e "${UNDERLINE}You may be asked if you wish to continue connecting.  Say yes.${NOUNDERLINE}"
+  local drush_version=`terminus drush ${1}.${2} -- --version --pipe 2>/dev/null | cut -c-1`
+  if [ "$drush_version" -lt 6 ]; then
+    cleanup_on_error $1 $2 "The site needs to run Drush 7 for Drupal 7, Drush 8 for Drupal 8.  See https://pantheon.io/docs/drush-versions/" 12
+  fi
+  eval "$3='$drush_version'"
+}
+

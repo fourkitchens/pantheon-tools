@@ -1,5 +1,4 @@
 #!/bin/bash
-# pantheon-script-colours
 # Sets colour variables used throughout other scripts.
 
 # Used for questions and warnings.

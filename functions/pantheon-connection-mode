@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+
+###
+# Set the connection mode for the env.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param string $mode
+#   Either "sftp" or "git"
+##
+connection_mode() {
+  echo -e "Switching to $3 connection-mode..."
+  terminus -q connection:set ${1}.${2} $3
+  if [ $? = 1 ]; then
+    cleanup_on_error $1 $2 "error in switching to $3" 7
+  fi
+}
+

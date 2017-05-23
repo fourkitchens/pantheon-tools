@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+  . "$FUNCTIONS_DIR/pantheon-script-colours"
+  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+fi
+
+##
+# Check if features need to be regenerated.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+##
+drupal_regenerate_features() {
+  local sitename=$1
+  local multidev=$2
+
+  echo -e "Clearing caches."
+  terminus -q drush ${sitename}.${multidev} -- cache-clear all
+  echo -e "Checking if features need to be regenerated."
+  overridden=`terminus drush ${sitename}.${multidev} features-list 2>/dev/null | fgrep Overridden`
+  if [ "$overridden" != "" ]; then
+    echo -e "Regenerating these features:"
+    echo -e "$overridden"
+    terminus -q drush ${sitename}.${multidev} -- features-update-all -y
+    if [ $? != 0 ]; then
+      cleanup_on_error $sitename $multidev "Error regenerating features." 12
+    fi
+    multidev_commit "Regenerated features."
+  fi
+}

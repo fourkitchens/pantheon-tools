@@ -1,5 +1,4 @@
 #!/bin/bash
-# pantheon-authenticate
 
 # Include all of the functions that we need.
 FUNCTIONS_DIR="${BASH_SOURCE%/*}"

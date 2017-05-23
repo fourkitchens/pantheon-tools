@@ -1,5 +1,4 @@
 #!/bin/bash
-# pantheon-terminus-check
 
 # Include all of the subscripts that we need.
 SUB_SCRIPTS_DIR="${BASH_SOURCE%/*}"

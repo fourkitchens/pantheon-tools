@@ -1,5 +1,4 @@
 #!/bin/bash
-# pantheon-choose-site
 
 # Include all of the functions that we need.
 FUNCTIONS_DIR="${BASH_SOURCE%/*}"
@@ -22,6 +21,7 @@ multidev_delete() {
   local multidev=$2
   local multidev_url=''
   get_multidev_url $sitename $multidev multidev_url
+
   if [ "$3" != 1 ]; then
     echo -e "The URL for the multidev environment is:"
     echo -e "  $multidev_url"

@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+  . "$FUNCTIONS_DIR/pantheon-script-colours"
+  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+  . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
+fi
+
+###
+# Determine Drush version.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param $HAS_FEATURES
+#   Will be overwritten with the either 1 (true) or 0 (false).
+###
+drupal_check_features() {
+  local sitename=$1
+  local multidev=$2
+  local has_features=1
+
+  echo -e "Checking if Features module is installed."
+  drupal_check_if_module_installed $sitename $multidev "features"
+  if [ $? == 0 ]; then
+    has_features=0
+    eval "$3='$has_features'"
+    return;
+  fi
+  eval "$3='$has_features'"
+  echo -e "Checking that features are not overridden."
+  local overridden=`terminus drush ${sitename}.${multidev} features-list 2>/dev/null | fgrep Overridden`
+  if [ "$overridden" != "" ]; then
+    echo -e "$overridden"
+    cleanup_on_error $sitename $multidev "There are features overrides.  These should be cleaned up first." 8
+  fi
+}
+

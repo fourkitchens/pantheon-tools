@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+  . "$FUNCTIONS_DIR/pantheon-script-colours"
+  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+fi
+
+##
+# Check if the given module is installed.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param string $module_name
+#
+# @return boolean
+#   1 if installed, else 0.
+##
+drupal_check_if_module_installed() {
+  local installed=`terminus drush ${SITENAME}.${MULTIDEV} pm-list -- --status=enabled --pipe 2>/dev/null | fgrep $1`
+  if [ "$installed" != "" ]; then
+    return 1;
+  fi
+}
+

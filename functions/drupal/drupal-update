@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+  . "$FUNCTIONS_DIR/pantheon-script-colours"
+  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+  . "$FUNCTIONS_DIR/pantheon-commit"
+  . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
+fi
+
+###
+# Update a Drupal site.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+###
+drupal_update() {
+  local sitename=$1
+  local multidev=$2
+
+  echo -e "Checking Update Status Advanced."
+  drupal_check_if_module_installed $sitename $multidev "update_advanced"
+  if [ $? == 1 ]; then
+    # @todo Either rectify this, or switch to drush locks.
+    echo -e ""
+    echo -e "${BOLD}This tool is not yet smart enough to understand modules locked by Update Status Advanced module."
+    echo -e "${BOLD}Be sure to check this URL to see if any of the modules reported below are excluded for some reason:"
+    echo -e "${BOLD}  http://live-${sitename}.pantheonsite.io/admin/reports/updates/settings"
+    echo -e "${BOLD}Adjust those rules if necessary (maybe the most recent version needs to be ignored), and disregard the list below.  Instead use the report at:"
+    echo -e "${BOLD}  http://live-${sitename}.pantheonsite.io/admin/reports/updates${NOBOLD}"
+  fi
+
+  terminus -q drush ${sitename}.${multidev} -- rf -q
+  drupal_update_list_modules_needing_update $sitename $multidev
+  echo -e ""
+  echo -e "${BOLD}Remember that our security update policy does not include:${NOBOLD}"
+  echo -e "* Jumps to a new major version."
+  echo -e "  e.g. 7.x-2.4 to 7.x-3.0"
+  echo -e "* Upgrading an alpha or dev module."
+  echo -e "  e.g. 7.x-1.0-alpha3 to 7.x-1.0-beta2"
+  echo -e "These should be done as billable work. And might involve back-porting patches rather than running upgrades."
+
+  # @todo It would require less interaction if we did this a bit differently:
+  #       1. Build a list of all the modules that we want to update.
+  #       2. Update them one by one.  After each we ask for a commit message, as
+  #          long as the user doesn't see any error messages.
+  #       3. Ask the user to test the site.
+  while true; do
+    echo -e ""
+    echo -e "${UNDERLINE}Enter one of the following:${NOUNDERLINE}"
+    echo -e "* The machine-name of a module to update."
+    echo -e "* 'list' to show the list again."
+    echo -e "* 'none' to move on to the next step."
+    read -p "? " module;
+    case $module in
+      none) break ;;
+      list) drupal_update_list_modules_needing_update $sitename $multidev ;;
+      *)
+        if [ "$command" != "" ]; then
+          drupal_update_module $sitename $multidev $module
+          multidev_commit $sitename $multidev "Security update for $module module."
+        fi
+        ;;
+    esac
+  done;
+}
+
+##
+# List all modules that need a security update.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+##
+drupal_update_list_modules_needing_update() {
+  local sitename=$1
+  local multidev=$2
+
+  echo -e "Checking which modules need an update."
+  terminus drush ${sitename}.${multidev} pm-updatestatus -- --security-only 2>&1 | fgrep -v '[notice]'
+}
+
+##
+# Update the given module to the latest stable version.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param string $module
+#   Name of the module to update.
+##
+drupal_update_module() {
+  local sitename=$1
+  local multidev=$2
+  local module=$3
+  local multidev_url=''
+  get_multidev_url $sitename $multidev multidev_url
+
+  drupal_check_if_module_installed $sitename $multidev $module
+  if [ $? == 0 ]; then
+    echo "${INVERSE}Module $module does not exist.${NOINVERSE}"
+    return;
+  fi
+
+  echo "Updating the code for $module..."
+  terminus -q drush ${sitename}.${multidev} -- pm-updatecode --no-backup $module -y
+  if [ $? != 0 ]; then
+    cleanup_on_error $sitename $multidev"error updating the code to the latest version." 9
+  fi
+
+  echo "Updating the database for $module..."
+  terminus -q drush ${sitename}.${multidev} -- updatedb -y
+  if [ $? != 0 ]; then
+    cleanup_on_error $sitename $multidev "error updating the database." 10
+  fi
+
+  echo -e "${BOLD}$module has been updated. Please test it here:${NOBOLD}"
+  echo -e "  $multidev_url"
+  echo -e ""
+  echo -e "Some things you might need to check:"
+  echo -e "* Check site functionality related to this module."
+  echo -e "* Check for custom code that integrates with the updated module."
+  # @todo Check for this:
+  echo -e "* Check for any patches for the module in sites/all/hacks."
+  echo -e ""
+  echo -e "${UNDERLINE}Continue with the process (committing the code)?${NOUNDERLINE}"
+  read -p "${UNDERLINE}[${BOLD}y${NOBOLD}]es [n]o, I'll re-run the script later. [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+  case $continue in
+    [Nn] ) exit 0 ;;
+    *) ;;
+  esac
+}

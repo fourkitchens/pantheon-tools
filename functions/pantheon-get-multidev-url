@@ -1,5 +1,4 @@
 #!/bin/bash
-# pantheon-choose-site
 
 ###
 # Get the framework for the given site
