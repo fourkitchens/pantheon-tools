@@ -9,23 +9,23 @@ fi
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
 
 ##
-# Check if the given module is installed.
+# Check if the given plugin is installed.
 #
 # @param string $SITENAME
 #   The machine name of the site.
 # @param string $MULTIDEV
 #   The machine name of the multidev.
-# @param string $module_name
+# @param string $plugin_name
 #
 # @return boolean
 #   1 if installed, else 0.
 ##
-drupal_check_if_module_installed() {
+wp_check_if_plugin_installed() {
   local sitename=$1
   local multidev=$2
-  local module=$3
-  local installed=`terminus drush ${sitename}.${multidev} pm-list -- --status=enabled --pipe 2>/dev/null | fgrep $module`
-  if [ "$installed" != "" ]; then
+  local plugin=$3
+  local active=`terminus wp ${sitename}.${multidev} plugin -- status $plugin | fgrep "Active"`
+  if [ "$active" != "" ]; then
     return 1;
   fi
 }

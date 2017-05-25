@@ -20,6 +20,7 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/drupal/drupal-check-features"
 . "$DIR/functions/drupal/drupal-regenerate-features"
 . "$DIR/functions/drupal/drupal-update"
+. "$DIR/functions/wp/wp-update"
 
 ###
 # Run security updates.
@@ -49,9 +50,13 @@ multidev_update() {
         drupal_regenerate_features $sitename $multidev
       fi
       ;;
+    wordpress|wordpress_network)
+      # @todo Check for WP-CFM (WP's version of config management), and check for overrides.
+      wp_update $sitename $multidev
+      # @todo If WP-CFM, then update config.
+      ;;
     *)
-      # wordpress and drupal8
-      # @link https://github.com/pixotech/Pantheon-Updates/blob/master/pantheon-update.sh#L38
+      # drupal8
       echo -e "$framework is not yet supported.  Do whatever it is that you do to run security updates on the multi-site, then continue."
       echo -e "  $url"
       read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
@@ -118,5 +123,4 @@ echo -e "Thanks.  All done."
 # Deploy to live.
 # Show the status report
 #
-# @todo Ring a bell after long processes finish.
 # @todo Core updates via a terminus command rather than drush

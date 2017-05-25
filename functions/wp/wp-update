@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/pantheon-commit"
+. "$FUNCTIONS_DIR/pantheon-get-multidev-url"
+. "$FUNCTIONS_DIR/wp/wp-check-if-plugin-installed"
+
+###
+# Update a WP site.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+###
+wp_update() {
+  local sitename=$1
+  local multidev=$2
+
+  wp_update_list_plugins_needing_update $sitename $multidev
+  echo -e ""
+  echo -e "${BOLD}Remember that our security update policy does not include:${NOBOLD}"
+  echo -e "* Jumps to a new major version."
+  echo -e "  e.g. 3.9.5 to 4.1.2"
+  echo -e "These should be done as billable work. And might involve back-porting patches rather than running upgrades."
+
+  # @todo It would require less interaction if we did this a bit differently:
+  #       1. Build a list of all the modules that we want to update.
+  #       2. Update them one by one.  After each we ask for a commit message, as
+  #          long as the user doesn't see any error messages.
+  #       3. Ask the user to test the site.
+  while true; do
+    echo -e ""
+    echo -e "${UNDERLINE}Enter one of the following:${NOUNDERLINE}"
+    echo -e "* The machine-name of a plugin to update."
+    echo -e "* 'list' to show the list again."
+    echo -e "* 'none' to move on to the next step."
+    read -p "? " plugin;
+    case $plugin in
+      none) break ;;
+      list) wp_update_list_plugins_needing_update $sitename $multidev ;;
+      *)
+        if [ "$plugin" != "" ]; then
+          wp_update_plugin $sitename $multidev $plugin
+          commit $sitename $multidev "Security update for plugin $plugin."
+        fi
+        ;;
+    esac
+  done;
+}
+
+##
+# List all plugins that need a security update.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+##
+wp_update_list_plugins_needing_update() {
+  local sitename=$1
+  local multidev=$2
+  local uuid=`terminus site:info ${sitename} --fields=ID --format=list`
+  echo -e "${BOLD}To see a list of plugins that require an update, visit ${NOBOLD}(it may take a minute to load the full report):"
+  echo -e "  https://dashboard.pantheon.io/sites/${uuid}#live/status"
+}
+
+##
+# Update the given plugin to the latest stable version.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+# @param string $plugin
+#   Machine name of the plugin to update.
+##
+wp_update_plugin() {
+  local sitename=$1
+  local multidev=$2
+  local plugin=$3
+  local url=''
+  get_multidev_url $sitename $multidev url
+
+  wp_check_if_module_installed $sitename $multidev $plugin
+  if [ $? == 0 ]; then
+    echo "${INVERSE}Plugin $module does not exist.${NOINVERSE}"
+    return;
+  fi
+
+  echo "Updating $plugin..."
+  terminus wp ${sitename}.${multidev} -- plugin update $plugin
+  if [ $? != 0 ]; then
+    cleanup_on_error $sitename $multidev "error updating $plugin to the latest version." 9
+  fi
+
+  echo -e "${BOLD}$plugin has been updated. Please test it here:${NOBOLD}"
+  echo -e "  $url"
+  echo -e ""
+  echo -e "Some things you might need to check:"
+  echo -e "* Check site functionality related to this plugin."
+  echo -e "* Check for custom code that integrates with the updated plugin."
+  # @todo Check for this:
+  echo -e "* Check for any patches for the plugin in [who knows where patches for WP stuff is typically stored]."
+  echo -e ""
+  echo -e "${UNDERLINE}Continue with the process (committing the code)?${NOUNDERLINE}"
+  read -p "${UNDERLINE}[${BOLD}y${NOBOLD}]es [n]o, I'll re-run the script later. [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+  case $continue in
+    [Nn] ) exit 0 ;;
+    *) ;;
+  esac
+}

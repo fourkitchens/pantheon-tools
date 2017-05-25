@@ -112,7 +112,7 @@ drupal_update_module() {
   echo "Updating the code for $module..."
   terminus -q drush ${sitename}.${multidev} -- pm-updatecode --no-backup $module -y
   if [ $? != 0 ]; then
-    cleanup_on_error $sitename $multidev"error updating the code to the latest version." 9
+    cleanup_on_error $sitename $multidev "error updating the code to the latest version." 9
   fi
 
   echo "Updating the database for $module..."
