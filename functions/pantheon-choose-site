@@ -12,7 +12,10 @@ if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 #   Will be overwritten with the machine name of the chosen site.
 ##
 choose_site() {
-  terminus site:list --fields="name,id,framework"
+  echo -e "Getting a list of sites."
+  # This list is in a completely random order.  `sort` is not ideal, but better
+  # than not.
+  terminus site:list --fields="name,id,framework" | sort
   while true; do
     local sitename=''
     read -p "${UNDERLINE}Type in site name and press [Enter] to start updating:${NOUNDERLINE} " sitename

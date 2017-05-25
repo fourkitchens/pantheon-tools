@@ -1,0 +1,14 @@
+#!/bin/bash
+
+###
+# Speak this message if possible, otherwise just ring the system bell.
+#
+# @param string $Message
+#   The message to speak.
+###
+speak_message() {
+  if hash say 2>/dev/null; then
+    say -v Fred "$1"
+  fi
+  tput bel
+}

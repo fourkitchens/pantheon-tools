@@ -13,11 +13,13 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-multidev-create"
 . "$DIR/functions/pantheon-cleanup-on-error"
 . "$DIR/functions/pantheon-multidev-delete"
+. "$DIR/functions/pantheon-multidev-merge"
 . "$DIR/functions/pantheon-get-multidev-url"
 . "$DIR/functions/pantheon-connection-mode"
 . "$DIR/functions/drupal/drupal-get-drush-version"
 . "$DIR/functions/drupal/drupal-check-features"
 . "$DIR/functions/drupal/drupal-regenerate-features"
+. "$DIR/functions/drupal/drupal-update"
 
 ###
 # Run security updates.
@@ -33,8 +35,8 @@ multidev_update() {
   local sitename=$1
   local framework=$2
   local multidev=$3
-  local multidev_url=''
-  get_multidev_url $sitename $multidev multidev_url
+  local url=''
+  get_multidev_url $sitename $multidev url
 
   case $framework in
     drupal)
@@ -51,7 +53,7 @@ multidev_update() {
       # wordpress and drupal8
       # @link https://github.com/pixotech/Pantheon-Updates/blob/master/pantheon-update.sh#L38
       echo -e "$framework is not yet supported.  Do whatever it is that you do to run security updates on the multi-site, then continue."
-      echo -e "  $multidev_url"
+      echo -e "  $url"
       read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
       case $continue in
         [Nn])
@@ -95,11 +97,11 @@ SUGGESTED_MULTIDEV='sec'`date "+%Y%m%d"`
 MULTIDEV=''
 multidev_create $SITENAME $FRAMEWORK $SUGGESTED_MULTIDEV MULTIDEV
 #MULTIDEV=sec20170301
-MULTIDEV_URL=''
-get_multidev_url $SITENAME $MULTIDEV MULTIDEV_URL
+URL=''
+get_multidev_url $SITENAME $MULTIDEV URL
 
 connection_mode $SITENAME $MULTIDEV 'sftp'
-multidev_update
+multidev_update $SITENAME $FRAMEWORK $MULTIDEV
 connection_mode $SITENAME $MULTIDEV 'git'
 
 multidev_merge $SITENAME $FRAMEWORK $MULTIDEV

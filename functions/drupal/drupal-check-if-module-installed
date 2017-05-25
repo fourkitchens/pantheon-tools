@@ -4,9 +4,9 @@
 if [ -z ${FUNCTIONS_DIR+x} ]; then
   FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
   if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
-  . "$FUNCTIONS_DIR/pantheon-script-colours"
-  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
 fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
 
 ##
 # Check if the given module is installed.
@@ -21,7 +21,11 @@ fi
 #   1 if installed, else 0.
 ##
 drupal_check_if_module_installed() {
-  local installed=`terminus drush ${SITENAME}.${MULTIDEV} pm-list -- --status=enabled --pipe 2>/dev/null | fgrep $1`
+  local sitename=$1
+  local multidev=$2
+  local module=$3
+  local has_features=1
+  local installed=`terminus drush ${sitename}.${multidev} pm-list -- --status=enabled --pipe 2>/dev/null | fgrep $module`
   if [ "$installed" != "" ]; then
     return 1;
   fi

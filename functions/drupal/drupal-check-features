@@ -4,10 +4,10 @@
 if [ -z ${FUNCTIONS_DIR+x} ]; then
   FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
   if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
-  . "$FUNCTIONS_DIR/pantheon-script-colours"
-  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
-  . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
 fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
 
 ###
 # Determine Drush version.

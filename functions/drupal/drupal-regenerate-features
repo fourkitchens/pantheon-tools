@@ -4,9 +4,9 @@
 if [ -z ${FUNCTIONS_DIR+x} ]; then
   FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
   if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
-  . "$FUNCTIONS_DIR/pantheon-script-colours"
-  . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
 fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
 
 ##
 # Check if features need to be regenerated.

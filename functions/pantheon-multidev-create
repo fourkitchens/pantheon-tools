@@ -5,6 +5,7 @@ FUNCTIONS_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/speak-message"
 
 ###
 # Create a multi-dev.
@@ -63,6 +64,7 @@ multidev_create() {
       >&2 echo -e "Error: Could not create multidev."
       exit 5;
     fi
+    speak_message "Multidev created."
   else
     echo -e "Multidev environment $multidev already exists and will be used for the rest of the procedure."
     from_env_default='none'
@@ -79,6 +81,7 @@ multidev_create() {
         if [ $? != 0 ]; then
           cleanup_on_error $sitename $multidev "error cloning content from ${from_env} to ${multidev}" 6
         fi
+        speak_message "Database copied."
         ;;
     esac
   fi

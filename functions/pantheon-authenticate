@@ -22,6 +22,6 @@ terminus_authenticate() {
   else
     echo -e "You are authenticated with Terminus as:"
     echo -e " $whoami"
-    echo -e "${UNDERLINE}To log in as someone else, run \`terminus auth:login\` before running this script. ${NOUNDERLINE}"
+    echo -e "To log in as someone else, run \`terminus auth:login\` before running this script."
   fi
 }
