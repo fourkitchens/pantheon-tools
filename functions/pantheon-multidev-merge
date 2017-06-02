@@ -5,6 +5,7 @@ FUNCTIONS_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-error-no-cleanup"
+. "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
 
 ##
 # Merge a multi-dev to dev.
@@ -39,10 +40,13 @@ multidev_merge() {
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
       fi
-      echo -e "Reverting Features."
-      terminus -q drush ${sitename}.dev -- features-revert-all -y
-      if [ $? != 0 ]; then
-        error_no_cleanup "Error running drush fra." 15
+      drupal_check_if_module_installed $sitename $multidev "features"
+      if [ $? == 1 ]; then
+        echo -e "Reverting Features."
+        terminus -q drush ${sitename}.dev -- features-revert-all -y
+        if [ $? != 0 ]; then
+          error_no_cleanup "Error running drush fra." 15
+        fi
       fi
       ;;
     *)
