@@ -33,6 +33,8 @@ multidev_create() {
   while true; do
     read -p "${UNDERLINE}What should the multidev be called. You may use the name of an existing branch. [${BOLD}${sugested_multidev}${NOBOLD}]? ${NOUNDERLINE}"  multidev
     multidev="${multidev:-$sugested_multidev}"
+    # Replace hash characters which are common from Pivotal Tracker IDs.
+    multidev="${multidev/\#/}"
 
     # Validate that it's fewer than 12 chars (Pantheon's limit for multi-devs).
     charlength=${#multidev}
@@ -61,7 +63,7 @@ multidev_create() {
     echo -e "Creating multidev ${multidev} from ${from_env}.  Please wait (this can take a long time)..."
     terminus -q multidev:create ${sitename}.${from_env} ${multidev}
     if [ $? != 0 ]; then
-      >&2 echo -e "Error: Could not create multidev."
+      >&2 echo -e "Error: Could not create multidev. Maybe the site is already at its max of 10 multidevs.  Check the Pantheon dashboard."
       exit 5;
     fi
     speak_message "Multidev created."
