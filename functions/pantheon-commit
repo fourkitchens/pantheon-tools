@@ -27,7 +27,7 @@ commit() {
   terminus -q env:clear-cache ${sitename}.${multidev}
   read -p "${UNDERLINE}Please provide git commit message [${BOLD}$default_commit_message${NOBOLD}]:${NOUNDERLINE} " commit_message
   commit_message="${commit_message:-$default_commit_message}"
-  terminus -q env:commit ${sitename}.${multidev} --message="$commit_message"
+  terminus -q env:commit ${sitename}.${multidev} --message="$commit_message" --force
   if [ $? != 0 ]; then
     cleanup_on_error $sitename $multidev "Error committing to git." 11
   fi
