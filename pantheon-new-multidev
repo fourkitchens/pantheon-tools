@@ -1,0 +1,31 @@
+#!/bin/bash
+# pantheon-security-update
+# Bash script to run security updates on a Pantheon site.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-terminus-check"
+. "$DIR/functions/pantheon-authenticate"
+. "$DIR/functions/pantheon-choose-site"
+. "$DIR/functions/pantheon-get-framework"
+. "$DIR/functions/pantheon-multidev-create"
+
+#set -x
+
+terminus_check
+terminus_authenticate
+SITENAME=''
+choose_site SITENAME
+#SITENAME=heron
+FRAMEWORK=''
+get_framework $SITENAME FRAMEWORK
+#FRAMEWORK=drupal
+
+SUGGESTEDMULTIDEV=''
+MULTIDEV=''
+multidev_create $SITENAME $FRAMEWORK $SUGGESTEDMULTIDEV MULTIDEV
+
+echo -e "Thanks.  All done."
+
