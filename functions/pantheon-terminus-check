@@ -20,9 +20,16 @@ terminus_check() {
     echo -e "${INVERSE}You typically add this line to ~/.profile or ~/.bash_profile .${NOINVERSE}"
     exit 1
   fi
-  terminus self:info -q
+  local version=`terminus self:info --fields=terminus_version --format=list`
   if [ $? == 0 ]; then
     echo -e "Terminus is installed!"
+    local versionmajor=${version%%.*}
+    local versionrest=${version#*.}
+    local versionminor=${versionrest%%.*}
+    if [[ versionmajor < 1 ]] || [[ versionmajor -eq 1 && versionminor -lt 3 ]]; then
+      >&2  echo -e "${INVERSE}But you must have at least 1.3.0 and you have $version.  Please upgrade. ${NOINVERSE}"
+      exit 1
+    fi
   else
     >&2  echo -e "${INVERSE}Terminus is not acting as expected.  Do you have version >= 1.0?${NOINVERSE}"
     exit 1
