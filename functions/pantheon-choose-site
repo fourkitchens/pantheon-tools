@@ -18,7 +18,7 @@ choose_site() {
   terminus site:list --fields="name,id,framework" | sort
   while true; do
     local sitename=''
-    read -p "${UNDERLINE}Type in site name and press [Enter] to start updating:${NOUNDERLINE} " sitename
+    read -p "${UNDERLINE}Type in site name and press [Enter] to continue:${NOUNDERLINE} " sitename
     terminus -q site:lookup $sitename
     if [ $? = 0 ]; then
       eval "$1='$sitename'"

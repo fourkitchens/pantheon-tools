@@ -28,7 +28,7 @@ multidev_create() {
   local charlength=0
   local from_env_default=''
   local from_env=''
-  echo -e "Updating ${framework} site ${sitename}."
+  echo -e "Creating multidev for ${framework} site ${sitename}."
 
   while true; do
     read -p "${UNDERLINE}What should the multidev be called. You may use the name of an existing branch. [${BOLD}${sugested_multidev}${NOBOLD}]? ${NOUNDERLINE}"  multidev
