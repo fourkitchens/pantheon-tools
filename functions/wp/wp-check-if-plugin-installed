@@ -7,6 +7,7 @@ if [ -z ${FUNCTIONS_DIR+x} ]; then
 fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/pantheon-get-multidev-url"
 
 ##
 # Check if the given plugin is installed.
@@ -24,6 +25,10 @@ wp_check_if_plugin_installed() {
   local sitename=$1
   local multidev=$2
   local plugin=$3
+  local url=''
+  get_multidev_url $sitename $multidev url
+  # @todo abstract out into a function passed in by the caller.
+  local sites=`terminus wp ${sitename}.${multidev} -- site list --url=$url --field=url`
   local active=`terminus wp ${sitename}.${multidev} plugin -- status $plugin | fgrep "Active"`
   if [ "$active" != "" ]; then
     return 1;

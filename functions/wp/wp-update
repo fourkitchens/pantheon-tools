@@ -88,7 +88,7 @@ wp_update_plugin() {
   local url=''
   get_multidev_url $sitename $multidev url
 
-  wp_check_if_module_installed $sitename $multidev $plugin
+  wp_check_if_plugin_installed $sitename $multidev $plugin
   if [ $? == 0 ]; then
     echo "${INVERSE}Plugin $module does not exist.${NOINVERSE}"
     return;
