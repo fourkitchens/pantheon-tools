@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/pantheon-commit"
+. "$FUNCTIONS_DIR/pantheon-get-multidev-url"
+. "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
+. "$FUNCTIONS_DIR/drupal/drupal-update"
+
+###
+# Update a Drupal site.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+###
+drupal8_update() {
+  local sitename=$1
+  local multidev=$2
+
+  # @todo How do we mark modules as patched, and not needing updates?  Drush Locks?
+
+  terminus -q drush ${sitename}.${multidev} -- pm-refresh -q
+  drupal_update_list_modules_needing_update $sitename $multidev
+  echo -e ""
+  echo -e "${BOLD}Remember that our security update policy does not include:${NOBOLD}"
+  echo -e "* Jumps to a new major version."
+  echo -e "  e.g. 8.x-2.4 to 8.x-3.0"
+  echo -e "* Upgrading an alpha or dev module."
+  echo -e "  e.g. 8.x-1.0-alpha3 to 8.x-1.0-beta2"
+  echo -e "These should be done as billable work. And might involve back-porting patches rather than running upgrades."
+
+  # @todo It would require less interaction if we did this a bit differently:
+  #       1. Build a list of all the modules that we want to update.
+  #       2. Update them one by one.  After each we ask for a commit message, as
+  #          long as the user doesn't see any error messages.
+  #       3. Ask the user to test the site.
+  while true; do
+    echo -e ""
+    echo -e "${UNDERLINE}Enter one of the following:${NOUNDERLINE}"
+    echo -e "* The machine-name of a module to update."
+    echo -e "* 'list' to show the list again."
+    echo -e "* 'none' to move on to the next step."
+    read -p "? " module;
+    case $module in
+      none) break ;;
+      list) drupal_update_list_modules_needing_update $sitename $multidev ;;
+      *)
+        if [ "$module" != "" ]; then
+          drupal_update_module $sitename $multidev $module
+          commit $sitename $multidev "Security update for $module module."
+        fi
+        ;;
+    esac
+  done;
+}

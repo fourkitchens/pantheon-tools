@@ -14,18 +14,19 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 
 #set -x
 
-terminus_check
-terminus_authenticate
+SUGGESTEDSITENAME=$1
+if [ "$SUGGESTEDSITENAME" == "" ]; then
+  terminus_check
+  terminus_authenticate
+fi
 SITENAME=''
-choose_site SITENAME
-#SITENAME=heron
+choose_site "$SUGGESTEDSITENAME" SITENAME
 FRAMEWORK=''
-get_framework $SITENAME FRAMEWORK
-#FRAMEWORK=drupal
+get_framework "$SITENAME" FRAMEWORK
 
 SUGGESTEDMULTIDEV=''
 MULTIDEV=''
-multidev_create $SITENAME $FRAMEWORK $SUGGESTEDMULTIDEV MULTIDEV
+multidev_create "$SITENAME" "$FRAMEWORK" "$SUGGESTEDMULTIDEV" MULTIDEV
 
 echo -e "Thanks.  All done."
 

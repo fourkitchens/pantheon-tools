@@ -8,22 +8,37 @@ if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 ##
 # Checks that Terminus is installed.
 #
+# @param string $SUGGESTEDSITENAME
+#   The suggested sitename.  Probably passed in as a commandline argument.
 # @param string $SITENAME
 #   Will be overwritten with the machine name of the chosen site.
 ##
 choose_site() {
-  echo -e "Getting a list of sites."
-  # This list is in a completely random order.  `sort` is not ideal, but better
-  # than not.
-  terminus site:list --fields="name,id,framework" | sort
-  while true; do
+  local suggestedsitename=$1
+  if [ "$suggestedsitename" == "" ]; then
+
+    echo -e "Getting a list of sites."
+    # This list is in a completely random order.  `sort` is not ideal, but better
+    # than not.
+    terminus site:list --fields="name,id,framework" | sort
+
     local sitename=''
-    read -p "${UNDERLINE}Type in site name and press [Enter] to continue:${NOUNDERLINE} " sitename
+  else
+    local sitename="$suggestedsitename"
+  fi
+  while true; do
+    if [ "$suggestedsitename" == "" ]; then
+      read -p "${UNDERLINE}Type in site name and press [Enter] to continue:${NOUNDERLINE} " sitename
+    fi
     terminus -q site:lookup $sitename
     if [ $? = 0 ]; then
-      eval "$1='$sitename'"
+      eval "$2='$sitename'"
+      if [ "$suggestedsitename" == "" ]; then
+        echo -e "${PROTIP} You can use the site name as an argument of this script to get to this point faster."
+      fi
       return;
     fi;
-    >&2 echo -e "${INVERSE}Site $localsitename could not be found.  Try again.${NOINVERSE}"
+    suggestedsitename=''
+    >&2 echo -e "${INVERSE}Site $sitename could not be found.  Try again.${NOINVERSE}"
   done;
 }

@@ -16,27 +16,28 @@ fi
 #   The machine name of the site.
 # @param string $MULTIDEV
 #   The machine name of the multidev.
-# @param $HASFEATURES
+# @param $HASCONFIGMANAGEMENT
 #   Will be overwritten with the either 1 (true) or 0 (false).
 ###
-drupal_check_features() {
+drupal8_check_config_management() {
   local sitename=$1
   local multidev=$2
-  local hasfeatures=1
+  local hasconfigmanagement=1
 
-  echo -e "Checking if Features module is installed."
-  drupal_check_if_module_installed $sitename $multidev "features"
+  echo -e "Checking if Config module is installed."
+  drupal_check_if_module_installed $sitename $multidev "config"
   if [ $? == 0 ]; then
-    hasfeatures=0
-    eval "$3='$hasfeatures'"
+    hasconfigmanagement=0
+    eval "$3='$hasconfigmanagement'"
     return;
   fi
-  eval "$3='$hasfeatures'"
-  echo -e "Checking that features are not overridden."
-  local overridden=`terminus drush ${sitename}.${multidev} -- features-list 2>/dev/null | fgrep Overridden`
+  eval "$3='$hasconfigmanagement'"
+  echo -e "Checking that config is not overridden."
+  # @todo Get skip-modules.
+  local overridden=`terminus drush ${sitename}.${multidev} -- config-import -n --preview=list 2>/dev/null  | fgrep -v 'Import the listed configuration changes?'`
   if [ "$overridden" != "" ]; then
     echo -e "$overridden"
-    cleanup_on_error $sitename $multidev "There are features overrides.  These should be cleaned up first." 8
+    cleanup_on_error $sitename $multidev "There are config overrides.  These should be cleaned up first." 8
   fi
 }
 

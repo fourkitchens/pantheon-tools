@@ -11,6 +11,5 @@
 get_framework() {
   local framework=''
   framework=`terminus site:info --field=framework $1`
-  echo $framework
   eval "$2='$framework'"
 }

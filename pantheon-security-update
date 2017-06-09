@@ -20,6 +20,8 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/drupal/drupal-check-features"
 . "$DIR/functions/drupal/drupal-regenerate-features"
 . "$DIR/functions/drupal/drupal-update"
+. "$DIR/functions/drupal8/drupal8-check-config-management"
+. "$DIR/functions/drupal8/drupal8-update"
 . "$DIR/functions/wp/wp-update"
 
 ###
@@ -41,12 +43,28 @@ multidev_update() {
 
   case $framework in
     drupal)
-      local drush_version=''
-      drupal_get_drush_version $sitename $multidev drush_version
-      local has_features=''
-      drupal_check_features $sitename $multidev has_features
+      local drushversion=''
+      drupal_get_drush_version $sitename $framework $multidev drushversion
+      local hasfeatures=''
+      drupal_check_features $sitename $multidev hasfeatures
       drupal_update $sitename $multidev
-      if [ "$has_features" == 1 ]; then
+      if [ "$hasfeatures" == 1 ]; then
+        drupal_regenerate_features $sitename $multidev
+      fi
+      ;;
+    wordpress|wordpress_network)
+      # @todo Check for WP-CFM (WP's version of config management), and check for overrides.
+      wp_update $sitename $multidev
+      # @todo If WP-CFM, then update config.
+      ;;
+    drupal8)
+      local drushversion=''
+      drupal_get_drush_version $sitename $framework $multidev drushversion
+      local hasconfigmanagement=''
+      drupal8_check_config_management $sitename $multidev hasconfigmanagement
+      drupal8_update $sitename $multidev
+      if [ "$hasconfigmanagement" == 1 ]; then
+        # @todo Upgrade this to D8.
         drupal_regenerate_features $sitename $multidev
       fi
       ;;
@@ -56,7 +74,6 @@ multidev_update() {
       # @todo If WP-CFM, then update config.
       ;;
     *)
-      # drupal8
       echo -e "$framework is not yet supported.  Do whatever it is that you do to run security updates on the multi-site, then continue."
       echo -e "  $url"
       read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
@@ -88,29 +105,30 @@ multidev_update() {
 }
 
 #set -x
-
-terminus_check
-terminus_authenticate
+SUGGESTEDSITENAME=$1
+if [ "$SUGGESTEDSITENAME" == "" ]; then
+  terminus_check
+  terminus_authenticate
+fi
 SITENAME=''
-choose_site SITENAME
-#SITENAME=heron
+choose_site "$SUGGESTEDSITENAME" SITENAME
 FRAMEWORK=''
-get_framework $SITENAME FRAMEWORK
+get_framework "$SITENAME" FRAMEWORK
 #FRAMEWORK=drupal
 
-SUGGESTED_MULTIDEV='sec'`date "+%Y%m%d"`
+SUGGESTEDMULTIDEV='sec'`date "+%Y%m%d"`
 MULTIDEV=''
-multidev_create $SITENAME $FRAMEWORK $SUGGESTED_MULTIDEV MULTIDEV
+multidev_create "$SITENAME" "$FRAMEWORK" "$SUGGESTEDMULTIDEV" MULTIDEV
 #MULTIDEV=sec20170301
 URL=''
-get_multidev_url $SITENAME $MULTIDEV URL
+get_multidev_url "$SITENAME" "$MULTIDEV" URL
 
-connection_mode $SITENAME $MULTIDEV 'sftp'
-multidev_update $SITENAME $FRAMEWORK $MULTIDEV
-connection_mode $SITENAME $MULTIDEV 'git'
+connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
+multidev_update "$SITENAME" "$FRAMEWORK" $MULTIDEV
+connection_mode "$SITENAME" "$MULTIDEV" 'git'
 
-multidev_merge $SITENAME $FRAMEWORK $MULTIDEV
-multidev_delete $SITENAME $MULTIDEV 1
+multidev_merge "$SITENAME" "$FRAMEWORK" $MULTIDEV
+multidev_delete "$SITENAME" "$MULTIDEV" 1
 
 echo -e "${UNDERLINE}Sorry, the deploying and backup part hasn't been written yet. Use the Pantheon dashboard. But also run \`drush cc all\`, \`drush updb\`, and \`drush fra\`${NOUNDERLINE}"
 echo -e

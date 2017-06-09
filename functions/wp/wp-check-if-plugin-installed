@@ -27,8 +27,9 @@ wp_check_if_plugin_installed() {
   local plugin=$3
   local url=''
   get_multidev_url $sitename $multidev url
-  # @todo abstract out into a function passed in by the caller.
+  # @todo Abstract out into a function passed in by the caller.
   local sites=`terminus wp ${sitename}.${multidev} -- site list --url=$url --field=url`
+  # @todo Need to iterate over all the WP Multisites.
   local active=`terminus wp ${sitename}.${multidev} plugin -- status $plugin | fgrep "Active"`
   if [ "$active" != "" ]; then
     return 1;

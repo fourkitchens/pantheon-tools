@@ -35,7 +35,7 @@ drupal_update() {
     echo -e "${BOLD}  http://live-${sitename}.pantheonsite.io/admin/reports/updates${NOBOLD}"
   fi
 
-  terminus -q drush ${sitename}.${multidev} -- rf -q
+  terminus -q drush ${sitename}.${multidev} -- pm-refresh -q
   drupal_update_list_modules_needing_update $sitename $multidev
   echo -e ""
   echo -e "${BOLD}Remember that our security update policy does not include:${NOBOLD}"

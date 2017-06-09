@@ -45,12 +45,6 @@ multidev_create() {
     >&2 echo -e "${INVERSE}Multidev name must be fewer than 12 characters.  Yours was ${charlength}.  Try again.${NOINVERSE}"
   done;
 
-  # @todo Make this happen.  We'll also need to determine the framework.
-  #echo -e "Pro tip:"
-  #echo -e "To get to this point directly, just use arguments."
-  #echo -e "  ./pantheon-update.sh ${sitename} ${multidev}"
-  #echo -e ""
-
   terminus -q env:info ${sitename}.${multidev}
   if [ $? != 0 ]; then
     echo -e "Creating multidev enironment $multidev"

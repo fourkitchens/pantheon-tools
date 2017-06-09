@@ -28,6 +28,7 @@ wp_update() {
   echo -e "${BOLD}Remember that our security update policy does not include:${NOBOLD}"
   echo -e "* Jumps to a new major version."
   echo -e "  e.g. 3.9.5 to 4.1.2"
+  echo -e "* Patching a known security vulnerability for which there is no official release/patch."
   echo -e "These should be done as billable work. And might involve back-porting patches rather than running upgrades."
 
   # @todo It would require less interaction if we did this a bit differently:
@@ -104,6 +105,7 @@ wp_update_plugin() {
   echo -e "  $url"
   echo -e ""
   echo -e "Some things you might need to check:"
+  echo -e "* Run any database updates (and make a note of this for deployment)."
   echo -e "* Check site functionality related to this plugin."
   echo -e "* Check for custom code that integrates with the updated plugin."
   # @todo Check for this:

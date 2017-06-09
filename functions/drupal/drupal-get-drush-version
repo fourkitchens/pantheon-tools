@@ -19,12 +19,19 @@ fi
 #   Will be overwritten with the major version of drush.
 ###
 drupal_get_drush_version() {
+  local sitename=$1
+  local framework=$2
+  local multidev=$3
+
   echo -e "Determining the drush version."
   echo -e "${UNDERLINE}You may be asked if you wish to continue connecting.  Say yes.${NOUNDERLINE}"
-  local drush_version=`terminus drush ${1}.${2} -- --version --pipe 2>/dev/null | cut -c-1`
-  if [ "$drush_version" -lt 6 ]; then
-    cleanup_on_error $1 $2 "The site needs to run Drush 7 for Drupal 7, Drush 8 for Drupal 8.  See https://pantheon.io/docs/drush-versions/" 12
+  local drush_version=`terminus drush ${sitename}.${multidev} -- --version --pipe 2>/dev/null | cut -c-1`
+  if [ $framework == 'drupal' ] && [ "$drush_version" -lt 7 ]; then
+    cleanup_on_error $1 $2 "The site needs to run Drush 7 for Drupal 7.  See https://pantheon.io/docs/drush-versions/" 12
   fi
-  eval "$3='$drush_version'"
+  if [ $framework == 'drupal8' ] && [ "$drush_version" -lt 8 ]; then
+    cleanup_on_error $1 $2 "The site needs to run Drush 8 or higher for Drupal 8.  See https://pantheon.io/docs/drush-versions/" 12
+  fi
+  eval "$4='$drush_version'"
 }
 
