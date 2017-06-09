@@ -1,0 +1,31 @@
+#!/bin/bash
+# Bash script to create a new Pantheon multidev environment.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-terminus-check"
+. "$DIR/functions/pantheon-authenticate"
+. "$DIR/functions/pantheon-choose-site"
+. "$DIR/functions/pantheon-get-framework"
+. "$DIR/functions/pantheon-multidev-create"
+
+#set -x
+
+SUGGESTEDSITENAME=$1
+if [ "$SUGGESTEDSITENAME" == "" ]; then
+  terminus_check
+  terminus_authenticate
+fi
+SITENAME=''
+choose_site "$SUGGESTEDSITENAME" SITENAME
+FRAMEWORK=''
+get_framework "$SITENAME" FRAMEWORK
+
+SUGGESTEDMULTIDEV=''
+MULTIDEV=''
+multidev_create "$SITENAME" "$FRAMEWORK" "$SUGGESTEDMULTIDEV" MULTIDEV
+
+echo -e "Thanks.  All done."
+

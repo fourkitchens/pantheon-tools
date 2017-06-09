@@ -1,6 +1,5 @@
 #!/bin/bash
-# pantheon-security-update
-# Bash script to run security updates on a Pantheon site.
+# Bash script to run merge a Pantheon multidev into the dev environment.
 
 # Include all of the subscripts that we need.
 DIR="${BASH_SOURCE%/*}"
@@ -10,7 +9,8 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-authenticate"
 . "$DIR/functions/pantheon-choose-site"
 . "$DIR/functions/pantheon-get-framework"
-. "$DIR/functions/pantheon-multidev-create"
+. "$DIR/functions/pantheon-multidev-merge"
+. "$DIR/functions/pantheon-multidev-delete"
 
 #set -x
 
@@ -24,9 +24,15 @@ choose_site "$SUGGESTEDSITENAME" SITENAME
 FRAMEWORK=''
 get_framework "$SITENAME" FRAMEWORK
 
-SUGGESTEDMULTIDEV=''
-MULTIDEV=''
-multidev_create "$SITENAME" "$FRAMEWORK" "$SUGGESTEDMULTIDEV" MULTIDEV
+MULTIDEV=$2
+if [ "$MULTIDEV" == "" ]; then
+    terminus multidev:list $SITENAME
+    echo -e "Choose a multidev to merge into dev."
+    read -p "${UNDERLINE}Type the name of a multidev to merge into dev, and press [Enter] to continue:?${NOUNDERLINE} " MULTIDEV;
+fi
+
+multidev_merge "$SITENAME" "$FRAMEWORK" $MULTIDEV
+multidev_delete "$SITENAME" "$MULTIDEV" 1
 
 echo -e "Thanks.  All done."
 

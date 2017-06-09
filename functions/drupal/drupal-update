@@ -77,13 +77,24 @@ drupal_update() {
 #   The machine name of the site.
 # @param string $MULTIDEV
 #   The machine name of the multidev.
+# @param string $MODULELIST
+#   Will be updated with the list of modules (machine names) that need to be updated
 ##
 drupal_update_list_modules_needing_update() {
   local sitename=$1
   local multidev=$2
+  local modulelist=''
 
   echo -e "Checking which modules need an update."
-  terminus drush ${sitename}.${multidev} pm-updatestatus -- --security-only 2>&1 | fgrep -v '[notice]'
+  terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only 2>/dev/null | fgrep -v '[notice]'
+
+  modulelist=`terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only --fields='short name' --pipe 2>/dev/null`
+  modulelist=`echo $modulelist`
+
+  echo -e "These modules are in the following locations:"
+  terminus drush ${sitename}.${multidev} -- pm-info --fields=path --no-field-labels --format=list `echo $modulelist` 2>/dev/null
+
+  eval "$3='$modulelist'"
 }
 
 ##

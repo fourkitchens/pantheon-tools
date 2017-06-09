@@ -28,7 +28,7 @@ choose_site() {
   fi
   while true; do
     if [ "$suggestedsitename" == "" ]; then
-      read -p "${UNDERLINE}Type in site name and press [Enter] to continue:${NOUNDERLINE} " sitename
+      read -p "${UNDERLINE}Type the name of a site, and press [Enter] to continue:${NOUNDERLINE} " sitename
     fi
     terminus -q site:lookup $sitename
     if [ $? = 0 ]; then

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+
+##
+# Check if config needs to be exported.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+##
+drupal_config_export() {
+  local sitename=$1
+  local multidev=$2
+  local continue
+
+  echo -e "Clearing caches."
+  terminus -q drush ${sitename}.${multidev} -- cache-clear all
+  echo -e "Checking if config needs to be exported."
+  # @todo Need to account for skipped modules.
+  local overridden=`terminus drush ${sitename}.${multidev} -- config-import -n --preview=list 2>/dev/null  | fgrep -v 'Import the listed configuration changes?'`
+  if [ "$overridden" != "" ]; then
+
+    echo -e "The following config is overridden:"
+    echo -e "$overridden"
+    read -p "${UNDERLINE}Should these overrides be exported to code before continuing with the merge? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}"  export
+    case $export in
+      [Nn]) ;;
+      *) 
+        echo -e "Exporting config:"
+        terminus -q drush ${sitename}.${multidev} -- features-update-all -y
+        if [ $? != 0 ]; then
+          cleanup_on_error $sitename $multidev "Error regenerating features." 12
+        fi
+        multidev_commit "Regenerated features."
+        ;;
+    esac
+  fi
+}

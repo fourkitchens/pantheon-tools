@@ -64,8 +64,7 @@ multidev_update() {
       drupal8_check_config_management $sitename $multidev hasconfigmanagement
       drupal8_update $sitename $multidev
       if [ "$hasconfigmanagement" == 1 ]; then
-        # @todo Upgrade this to D8.
-        drupal_regenerate_features $sitename $multidev
+        drupal_config_export $sitename $multidev
       fi
       ;;
     wordpress|wordpress_network)
@@ -90,7 +89,7 @@ multidev_update() {
   echo -e ""
   echo -e "${UNDERLINE}Do you wish to merge this multidev into the dev environment?${NOUNDERLINE}"
   echo -e "Some common cases where you shouldn't:"
-  echo -e "* If this was a wide-reacing change, and you are not familiar enough with the site to know if things are broken or not.  If so, then get the client to review."
+  echo -e "* If this was a wide-reaching change, and you are not familiar enough with the site to know if things are broken or not.  If so, then get the client to review."
   echo -e "* If deployments are always done in batches (e.g. Annenberg) and this should be included in the next batch."
   # @todo check for this.
   echo -e "* If there is undeployed code on the dev environment."
@@ -114,12 +113,12 @@ SITENAME=''
 choose_site "$SUGGESTEDSITENAME" SITENAME
 FRAMEWORK=''
 get_framework "$SITENAME" FRAMEWORK
-#FRAMEWORK=drupal
+#FRAMEWORK=drupal8
 
 SUGGESTEDMULTIDEV='sec'`date "+%Y%m%d"`
 MULTIDEV=''
 multidev_create "$SITENAME" "$FRAMEWORK" "$SUGGESTEDMULTIDEV" MULTIDEV
-#MULTIDEV=sec20170301
+#MULTIDEV=sec20170609
 URL=''
 get_multidev_url "$SITENAME" "$MULTIDEV" URL
 

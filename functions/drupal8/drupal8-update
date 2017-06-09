@@ -26,8 +26,31 @@ drupal8_update() {
 
   # @todo How do we mark modules as patched, and not needing updates?  Drush Locks?
 
+  local installprofile=`echo 'print drupal_get_profile();' | terminus drush ${sitename}.${multidev} php-script 2>/dev/null -`
+  echo -e "Install profile: $installprofile"
+  if [ $installprofile == "" ]; then
+    echo -e "${INVERSE}Warning${NOINVERSE} The install profile could not be determined.  Some install profiles cannot be updated with Drush.  Proceed with caution."
+    echo -e ""
+  fi
+  if [ $installprofile == "lightning" ]; then
+    echo -e "${INVERSE}This site uses the Lightning distribution.${NOINVERSE}"
+    echo -e "Drupal Core, and the contributed modules included with Lightning "
+    echo -e "cannot be upgraded using Drush.  Please upgrade a local copy of the"
+    echo -e "site using the instructions at:"
+    echo -e "  /code/profiles/lightning/UPDATE.md"
+    echo -e "You can still use this branch/multi-dev."
+    echo -e ""
+    echo -e "You may still use this script to upgrade any contrib modules that "
+    echo -e "are not included with Lightning. In the report for below, look at "
+    echo -e "the installation paths.  Modules included with Lightning are in "
+    echo -e "  profiles/lightning/*"
+    echo -e ""
+  fi
+
   terminus -q drush ${sitename}.${multidev} -- pm-refresh -q
-  drupal_update_list_modules_needing_update $sitename $multidev
+  local modulelist=''
+  drupal_update_list_modules_needing_update $sitename $multidev modulelist
+
   echo -e ""
   echo -e "${BOLD}Remember that our security update policy does not include:${NOBOLD}"
   echo -e "* Jumps to a new major version."
