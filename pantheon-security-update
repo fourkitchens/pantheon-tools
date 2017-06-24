@@ -47,30 +47,34 @@ multidev_update() {
       drupal_get_drush_version $sitename $framework $multidev drushversion
       local hasfeatures=''
       drupal_check_features $sitename $multidev hasfeatures
+      multidev_upstream_update $sitename $framework $multidev
+      connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
       drupal_update $sitename $multidev
       if [ "$hasfeatures" == 1 ]; then
         drupal_regenerate_features $sitename $multidev
       fi
+      connection_mode "$SITENAME" "$MULTIDEV" 'git'
       ;;
     wordpress|wordpress_network)
       # @todo Check for WP-CFM (WP's version of config management), and check for overrides.
+      multidev_upstream_update $sitename $framework $multidev
+      connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
       wp_update $sitename $multidev
       # @todo If WP-CFM, then update config.
+      connection_mode "$SITENAME" "$MULTIDEV" 'git'
       ;;
     drupal8)
       local drushversion=''
       drupal_get_drush_version $sitename $framework $multidev drushversion
       local hasconfigmanagement=''
       drupal8_check_config_management $sitename $multidev hasconfigmanagement
+      multidev_upstream_update $sitename $framework $multidev
+      connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
       drupal8_update $sitename $multidev
       if [ "$hasconfigmanagement" == 1 ]; then
         drupal_config_export $sitename $multidev
       fi
-      ;;
-    wordpress|wordpress_network)
-      # @todo Check for WP-CFM (WP's version of config management), and check for overrides.
-      wp_update $sitename $multidev
-      # @todo If WP-CFM, then update config.
+      connection_mode "$SITENAME" "$MULTIDEV" 'git'
       ;;
     *)
       echo -e "$framework is not yet supported.  Do whatever it is that you do to run security updates on the multi-site, then continue."
@@ -103,6 +107,50 @@ multidev_update() {
   esac
 }
 
+###
+# Check for upstream updates and run them if necessary.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $MULTIDEV
+#   The machine name of the multidev.
+##
+function multidev_upstream_update() {
+  local sitename=$1
+  local framework=$2
+  local multidev=$3
+
+  echo -e "Checking for an update with $framework upstream."
+  local status=`terminus upstream:updates:status ${sitename}.${multidev} 2>/dev/null`
+  if [ "$status" == "outdated" ]; then
+    echo -e "$framework upstream needs to be updated."
+    echo -e "Updating."
+    terminus upstream:updates:apply ${sitename}.${multidev}
+    if [ $? != 0 ]; then
+      echo -e "There was a problem applying the updates. Should we try to automatically resolve merge conflicts, or do you want to take care of this on your own?"
+      read -p "${UNDERLINE}Apply the updates and automatically resolve conflicts?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+      case $continue in
+        [Nn])
+          echo -e "You can re-run this script when you've resolved the problem and want to run updates for contrib modules."
+          echo -e "Or you can run the \`pantheon-merge\` script if you just want to merge and deploy."
+          exit 0
+          ;;
+        *) ;;
+      esac
+      terminus upstream:updates:apply ${sitename}.${multidev} --accept-upstream
+      if [ $? != 0 ]; then
+        cleanup_on_error $sitename $multidev "The upstream could not be updated automatically." 13
+      fi
+    fi
+    if [ $framework == 'drupal' ]  || [ $framework == 'drupal8' ]; then
+      terminus -q drush ${sitename}.${multidev} -- updatedb -y
+      if [ $? != 0 ]; then
+        cleanup_on_error $sitename $multidev "error updating the database." 10
+      fi
+    fi
+  fi
+}
+
 #set -x
 SUGGESTEDSITENAME=$1
 if [ "$SUGGESTEDSITENAME" == "" ]; then
@@ -113,18 +161,16 @@ SITENAME=''
 choose_site "$SUGGESTEDSITENAME" SITENAME
 FRAMEWORK=''
 get_framework "$SITENAME" FRAMEWORK
-#FRAMEWORK=drupal8
 
 SUGGESTEDMULTIDEV='sec'`date "+%Y%m%d"`
+#MULTIDEV='sec'`date "+%Y%m%d"`
 MULTIDEV=''
 multidev_create "$SITENAME" "$FRAMEWORK" "$SUGGESTEDMULTIDEV" MULTIDEV
-#MULTIDEV=sec20170609
+
 URL=''
 get_multidev_url "$SITENAME" "$MULTIDEV" URL
 
-connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
 multidev_update "$SITENAME" "$FRAMEWORK" $MULTIDEV
-connection_mode "$SITENAME" "$MULTIDEV" 'git'
 
 multidev_merge "$SITENAME" "$FRAMEWORK" $MULTIDEV
 multidev_delete "$SITENAME" "$MULTIDEV" 1
