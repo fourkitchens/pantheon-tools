@@ -3,8 +3,9 @@
 # Include all of the functions that we need.
 FUNCTIONS_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
-. "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-get-multidev-url"
 . "$FUNCTIONS_DIR/speak-message"
 
 ###
@@ -82,4 +83,8 @@ multidev_create() {
     esac
   fi
   eval "$4='$multidev'"
+  local url=''
+  get_multidev_url $sitename $multidev url
+  echo -e "Multidev URL:"
+  echo -e "  $url"
 }
