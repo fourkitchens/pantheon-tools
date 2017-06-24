@@ -39,7 +39,7 @@ drupal_config_export() {
         if [ $? != 0 ]; then
           cleanup_on_error $sitename $multidev "Error regenerating features." 12
         fi
-        multidev_commit "Regenerated features."
+        commit $sitename $multidev "Regenerated features."
         ;;
     esac
   fi
