@@ -33,7 +33,7 @@ drupal_check_features() {
   fi
   eval "$3='$hasfeatures'"
   echo -e "Checking that features are not overridden."
-  local overridden=`terminus drush ${sitename}.${multidev} -- features-list 2>/dev/null | fgrep Overridden`
+  local overridden=`terminus drush ${sitename}.${multidev} -- features-list --status=enabled --fields=name,feature,state 2>/dev/null | grep 'Needs review\|Overridden'`
   if [ "$overridden" != "" ]; then
     echo -e "$overridden"
     cleanup_on_error $sitename $multidev "There are features overrides.  These should be cleaned up first." 8
