@@ -4,7 +4,7 @@ Tools to run actions against a Pantheon site
 ## Pre-requisites
 1. Install [Terminus](https://github.com/pantheon-systems/terminus).
 2. Add Terminus to your Path.  For example, if Terminus is installed at `~/.composer/vendor/bin/terminus` then you need to add `~/.composer/vendor/bin` to your path.
-3. Add the directory containing these scripts to your Path.
+3. Add the directory containing pantheon-tools to your Path.
 
 ### How to add something to your path
   E.g.
