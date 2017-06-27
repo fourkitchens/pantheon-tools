@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-error-no-cleanup"
+. "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
+
+##
+# Merge one environment to another.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $FRAMEWORK
+#   The framework of the site.
+# @param string $env_source
+#   The machine name of the source environment.
+# @param string $env_dest
+#   The machine name of the destination environment.
+#   Must be directly possible.  i.e. You can't go straight from dev to live, you
+#   must first go through test.
+##
+env_merge() {
+  local sitename=$1
+  local framework=$2
+  local env_source=$3
+  local env_dest=$4
+
+  terminus -q env:wake ${sitename}.${env_source}
+  terminus -q env:wake ${sitename}.${env_dest}
+
+  # @todo Ask to continue if there's undeployed code.  Test using `terminus env:code-log ${sitename}.dev`.
+
+  # @todo Test for clean config in the source.
+
+  if [ "$env_source" == "dev" ] && [ "$env_dest" != "test" ]; then
+    echo -e "First merging ${sitename}: ${env_source} to ${env_dest}."
+    terminus -q multidev:merge-from-dev ${sitename}.${env_dest}
+  elif [ "$env_dest" == "dev" ]; then
+    echo -e "Merging ${sitename}: ${env_source} to ${env_dest}."
+    terminus -q multidev:merge-to-dev ${sitename}.${multidev}
+  else
+    # @todo Ask for backup
+    # @todo Ask for sync
+    # @todo Ask for deploy note.
+    echo -e "Merging ${sitename}: ${env_source} to ${env_dest}."
+    terminus -q env:deploy ${sitename}.${env_dest} --sync-content --cc
+  fi
+
+  if [ $? != 0 ]; then
+    error_no_cleanup "Error merging ${sitename}: ${env_dest} to ${env_dest}." 13
+  fi
+  echo -e "Clearing caches."
+  terminus -q env:clear-cache ${sitename}.${env_dest}
+  case $framework in
+    drupal)
+      echo -e "Updating the database."
+      if [ "$env_dest" == "test" ] || [ "$env_dest" == "dev" ]; then
+        echo -e "${PROTIP}Make note of whether any database updates happen.  If so you'll want to backup the production database when deploying."
+      fi
+      terminus -q drush ${sitename}.${env_dest} -- updatedb -y
+      if [ $? != 0 ]; then
+        error_no_cleanup "Error running drush updatedb." 14
+      fi
+      drupal_check_if_module_installed $sitename $env_dest "features"
+      if [ $? == 1 ]; then
+        echo -e "Reverting Features."
+        terminus -q drush ${sitename}.${env_dest} -- features-revert-all -y
+        if [ $? != 0 ]; then
+          error_no_cleanup "Error running drush features-revert-all." 15
+        fi
+      fi
+      ;;
+    *)
+      # @todo WP & D8.
+      # wordpress and drupal8
+      echo -e "$framework is not yet supported.  Do whatever it is that you do to update the database and revert configuration on the $env_dest site, then continue."
+      echo -e "  http://${env_dest}-${sitename}.pantheonsite.io/"
+      read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+      case $continue in
+        [Nn]) error_no_cleanup "" 0 ;;
+        *) ;;
+      esac
+      ;;
+  esac
+}

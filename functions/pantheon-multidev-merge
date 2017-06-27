@@ -5,6 +5,7 @@ FUNCTIONS_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-error-no-cleanup"
+. "$FUNCTIONS_DIR/pantheon-env-merge"
 . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
 
 ##
@@ -22,43 +23,10 @@ multidev_merge() {
   local framework=$2
   local multidev=$3
 
-  # @todo First merge master into dev.
 
-  echo -e "Merging ${sitename}.${multidev} to dev."
-  terminus -q env:wake ${sitename}.dev
-  terminus -q multidev:merge-to-dev ${sitename}.${multidev}
-  if [ $? != 0 ]; then
-    error_no_cleanup "Error merging to dev." 13
-  fi
-  echo -e "Clearing caches."
-  terminus -q env:clear-cache ${sitename}.dev
-  case $framework in
-    drupal)
-      echo -e "Updating the database."
-      echo -e "${PROTIP}Make note of whether any database updates happen.  If so you'll want to backup the production database when deploying."
-      terminus -q drush ${sitename}.dev -- updatedb -y
-      if [ $? != 0 ]; then
-        error_no_cleanup "Error running drush updatedb." 14
-      fi
-      drupal_check_if_module_installed $sitename $multidev "features"
-      if [ $? == 1 ]; then
-        echo -e "Reverting Features."
-        terminus -q drush ${sitename}.dev -- features-revert-all -y
-        if [ $? != 0 ]; then
-          error_no_cleanup "Error running drush fra." 15
-        fi
-      fi
-      ;;
-    *)
-      # @todo WP & D8.
-      # wordpress and drupal8
-      echo -e "$framework is not yet supported.  Do whatever it is that you do to update the database and revert configuration on the dev site, then continue."
-      echo -e "  http://dev-${sitename}.pantheonsite.io/"
-      read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
-      case $continue in
-        [Nn]) error_no_cleanup "" 0 ;;
-        *) ;;
-      esac
-      ;;
-  esac
+  # First merge master into dev.
+  env_merge $sitename $framework 'dev' $multidev
+
+  # Then merge the multidev into dev.
+  env_merge $sitename $framework $multidev 'dev'
 }
