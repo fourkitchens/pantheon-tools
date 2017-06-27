@@ -31,7 +31,7 @@ multidev_delete() {
   else
     echo -e "${UNDERLINE}Delete multidev $multidev?${NOUNDERLINE}"
   fi
-  read -p "[${BOLD}y${NOBOLD}]es [n]o? [${BOLD}y${NOBOLD}/n] " cleanup;
+  read -p "[${BOLD}y${NOBOLD}]es delete [n]o? [${BOLD}y${NOBOLD}/n] " cleanup;
   case $cleanup in
     [Nn]) ;;
     *)
