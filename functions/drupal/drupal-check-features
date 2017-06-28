@@ -33,10 +33,15 @@ drupal_check_features() {
   fi
   eval "$3='$hasfeatures'"
   echo -e "Checking that features are not overridden."
-  local overridden=`terminus drush ${sitename}.${multidev} -- features-list --status=enabled --fields=name,feature,state 2>/dev/null | grep 'Needs review\|Overridden'`
+  local overridden=`terminus drush ${sitename}.${multidev} -- features-list --status=enabled --fields=feature,state 2>/dev/null | grep 'Needs review\|Overridden'`
   if [ "$overridden" != "" ]; then
     echo -e "$overridden"
-    cleanup_on_error $sitename $multidev "There are features overrides.  These should be cleaned up first." 8
+    echo -e "There are features overrides.  These should be probably be cleaned up first.  You can do that on this branch.  Once cleaned up you can re-run this script to continue."
+    read -p "${UNDERLINE}[${BOLD}y${NOBOLD}]es I want to quit and clean up manually. [n]o, I want to continue anyway. [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+    case $continue in
+      [Yy] ) exit 0 ;;
+      *) ;;
+    esac
   fi
 }
 
