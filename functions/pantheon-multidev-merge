@@ -23,7 +23,6 @@ multidev_merge() {
   local framework=$2
   local multidev=$3
 
-
   # First merge master into dev.
   env_merge $sitename $framework 'dev' $multidev
 
