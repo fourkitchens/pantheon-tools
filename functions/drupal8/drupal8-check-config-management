@@ -37,7 +37,7 @@ drupal8_check_config_management() {
   local overridden=`terminus drush ${sitename}.${multidev} -- config-import -n --preview=list 2>/dev/null  | fgrep -v 'Import the listed configuration changes?'`
   if [ "$overridden" != "" ]; then
     echo -e "$overridden"
-    cleanup_on_error $sitename $multidev "There are config overrides.  These should be cleaned up first." 8
+    cleanup_on_error $sitename $multidev "There are config overrides.  These should be cleaned up first. Probably just run \`drush config-import\`" 8
   fi
 }
 

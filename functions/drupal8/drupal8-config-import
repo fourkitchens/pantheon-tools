@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+
+##
+# Import config from code to DB.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $ENV
+#   The machine name of the environment.
+##
+drupal_config_import() {
+  local sitename=$1
+  local env=$2
+  local continue
+
+  drupal_check_if_module_installed "$sitename" "$env" "config_split"
+  if [ $? == 1 ]; then
+    echo -e "Importing Configuration."
+    terminus -q drush ${sitename}.${env} -- config-import -y
+    if [ $? != 0 ]; then
+      error_no_cleanup "Error running drush config-import." 15
+    fi
+  else
+    echo -e "This site is not using Configuration Split module. Configuration will be reverted with the following command:"
+    echo -e "  drush config-import"
+    echo -e "Or, if this site requires a different command, run it now."
+    echo -e "${UNDERLINE}${BOLD}Y${NOBOLD}es, run \`drush config-import\`."
+    echo -e "${UNDERLINE}No, I've run a different command.  Continue to the next step."
+    read -p "${UNDERLINE}Import config [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+    case $continue in
+      [Nn]) ;;
+      *)
+        terminus -q drush ${sitename}.${env_dest} -- config-import -y
+        if [ $? != 0 ]; then
+          error_no_cleanup "Error running drush config-import." 15
+        fi
+        ;;
+    esac
+    echo -e "Updating entities."
+    terminus -q drush ${sitename}.${env_dest} -- entity-updates -y
+    if [ $? != 0 ]; then
+      error_no_cleanup "Error running drush entity-updates." 15
+    fi
+  fi
+}

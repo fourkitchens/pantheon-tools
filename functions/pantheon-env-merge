@@ -6,6 +6,7 @@ if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-error-no-cleanup"
 . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
+. "$FUNCTIONS_DIR/drupal8/drupal8-config-import"
 
 ##
 # Merge one environment to another.
@@ -53,12 +54,12 @@ env_merge() {
   fi
   echo -e "Clearing caches."
   terminus -q env:clear-cache ${sitename}.${env_dest}
+  if [ "$env_dest" == "test" ] || [ "$env_dest" == "dev" ]; then
+    echo -e "${PROTIP}Make note of whether any database updates happen.  If so you'll want to backup the production database when deploying."
+  fi
   case $framework in
     drupal)
       echo -e "Updating the database."
-      if [ "$env_dest" == "test" ] || [ "$env_dest" == "dev" ]; then
-        echo -e "${PROTIP}Make note of whether any database updates happen.  If so you'll want to backup the production database when deploying."
-      fi
       terminus -q drush ${sitename}.${env_dest} -- updatedb -y
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
@@ -72,9 +73,17 @@ env_merge() {
         fi
       fi
       ;;
+    drupal8)
+      echo -e "Updating the database."
+      terminus -q drush ${sitename}.${env_dest} -- updatedb -y
+      if [ $? != 0 ]; then
+        error_no_cleanup "Error running drush updatedb." 14
+      fi
+      drupal_config_import "$sitename" "$env_dest"
+      ;;
     *)
-      # @todo WP & D8.
-      # wordpress and drupal8
+      # @todo WP.
+      # wordpress
       echo -e "$framework is not yet supported.  Do whatever it is that you do to update the database and revert configuration on the $env_dest site, then continue."
       echo -e "  http://${env_dest}-${sitename}.pantheonsite.io/"
       read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
