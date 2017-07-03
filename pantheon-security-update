@@ -124,6 +124,12 @@ function multidev_upstream_update() {
   local status=`terminus upstream:updates:status ${sitename}.${multidev} 2>/dev/null`
   if [ "$status" == "outdated" ]; then
     echo -e "$framework upstream needs to be updated."
+    terminus upstream:updates:list ${sitename}.${multidev} --fields=datetime,message,author
+    read -p "${UNDERLINE}Apply the updates?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+    case $continue in
+      [Nn]) return 0 ;;
+      *) ;;
+    esac
     echo -e "Updating."
     terminus upstream:updates:apply ${sitename}.${multidev}
     if [ $? != 0 ]; then
