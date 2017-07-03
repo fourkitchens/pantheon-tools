@@ -39,8 +39,8 @@ drupal_check_features() {
     echo -e "There are features overrides.  These should be probably be cleaned up first.  You can do that on this branch.  Once cleaned up you can re-run this script to continue."
     read -p "${UNDERLINE}[${BOLD}y${NOBOLD}]es I want to quit and clean up manually. [n]o, I want to continue anyway. [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
     case $continue in
-      [Yy] ) exit 0 ;;
-      *) ;;
+      [Nn]) ;;
+      *)  exit 0 ;;
     esac
   fi
 }
