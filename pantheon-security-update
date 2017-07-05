@@ -147,6 +147,7 @@ function multidev_upstream_update() {
       if [ $? != 0 ]; then
         cleanup_on_error $sitename $multidev "The upstream could not be updated automatically." 13
       fi
+      echo -e "${UNDERLINE}You will likely need to re-apply any patches to core $framework.${NOUNDERLINE}"
     fi
     if [ $framework == 'drupal' ]  || [ $framework == 'drupal8' ]; then
       terminus -q drush ${sitename}.${multidev} -- updatedb -y
