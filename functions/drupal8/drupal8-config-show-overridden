@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+
+##
+# Show the overridden config.
+#
+# It's assumed that drupal8_check_config_management has already been run.
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $ENV
+#   The machine name of the environment.
+# @param int $ISOVERRIDDEN
+#   Is the config overridden?  TRUE== 1, FALSE == 0.  If indeterminate, then 1.
+##
+drupal_config_show_overridden() {
+  local sitename=$1
+  local env=$2
+  local isoverridden=1
+
+  echo -e "Checking Drush version."
+  local version=`terminus drush ${sitename}.${multidev} -- --version --pipe`
+  local versionmajor=${version%%.*}
+  local versionrest=${version#*.}
+  local versionminor=${versionrest%%.*}
+  local versionpoint=${versionrest#*.}
+
+  # Drush cim only works to show overridden Config Split in Drush >= 8.1.10
+  if [[ $versionminor < 1 ]] || [[ $versionminor -eq 1 && $versionpoint -lt 10 ]]; then
+    echo -e "Config differences can't be shown on the command line.  Instead, use the link below."
+    local link=`terminus drush ${sitename}.${multidev} -- user-login 1 '/admin/config/development/configuration' 2>/dev/null`
+    echo -e "  $link"
+    return
+  else
+    local overridden=`terminus drush ${sitename}.${multidev} -- config-import -n --preview=list 2>/dev/null  | fgrep -v 'Import the listed configuration changes?'`
+    if [ "$overridden" != "" ]; then
+      echo -e "$overridden"
+      cleanup_on_error $sitename $multidev "There are config overrides.  These should be cleaned up first. Probably just run \`drush config-import\`." 8
+    else
+      isoverridden=0
+    fi
+    eval "$3='$isoverridden'"
+    return;
+  fi
+}

@@ -83,6 +83,7 @@ multidev_create() {
     esac
   fi
   eval "$4='$multidev'"
+
   local url=''
   get_multidev_url $sitename $multidev url
   echo -e "Multidev URL:"

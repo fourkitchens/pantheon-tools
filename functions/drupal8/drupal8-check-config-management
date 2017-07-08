@@ -8,6 +8,8 @@ fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
 . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
+. "$FUNCTIONS_DIR/drupal8/drupal8-config-show-overridden"
+. "$FUNCTIONS_DIR/drupal8/drupal8-config-export"
 
 ###
 # Determine Drush version.
@@ -31,13 +33,22 @@ drupal8_check_config_management() {
     eval "$3='$hasconfigmanagement'"
     return;
   fi
+
+  echo -e "Checking if Configuration Split module is installed."
+  drupal_check_if_module_installed $sitename $multidev "config_split"
+  if [ $? == 0 ]; then
+    echo -e "{$INVERSE}This site is not using Configuration Split module.  Please set that up before continuing. See:{$NOINVERSE}"
+    echo -e "  https://www.advomatic.com/blog/using-configuration-split-to-have-dev-only-configuration-in-drupal-8"
+    exit 8
+  fi
+
   eval "$3='$hasconfigmanagement'"
-  echo -e "Checking that config is not overridden."
-  # @todo Get skip-modules.
-  local overridden=`terminus drush ${sitename}.${multidev} -- config-import -n --preview=list 2>/dev/null  | fgrep -v 'Import the listed configuration changes?'`
-  if [ "$overridden" != "" ]; then
-    echo -e "$overridden"
-    cleanup_on_error $sitename $multidev "There are config overrides.  These should be cleaned up first. Probably just run \`drush config-import\`" 8
+
+  echo -e "Checking if config is overridden."
+  local isoverridden=0
+  drupal_config_show_overridden $sitename $multidev isoverridden
+  if [ "$isoverridden" == 1 ]; then
+    drupal_config_export $sitename $multidev 0
   fi
 }
 

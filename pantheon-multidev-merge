@@ -11,6 +11,8 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-get-framework"
 . "$DIR/functions/pantheon-multidev-merge"
 . "$DIR/functions/pantheon-multidev-delete"
+. "$DIR/functions/drupal/drupal-check-features"
+. "$DIR/functions/drupal8/drupal8-check-config-management"
 
 #set -x
 
@@ -30,6 +32,21 @@ if [ "$MULTIDEV" == "" ]; then
     echo -e "Choose a multidev to merge into dev."
     read -p "${UNDERLINE}Type the name of a multidev to merge into dev, and press [Enter] to continue:?${NOUNDERLINE} " MULTIDEV;
 fi
+
+case $FRAMEWORK in
+  drupal)
+    drupal_check_features "$SITENAME" "$MULTIDEV"
+    ;;
+
+  drupal8)
+    drupal8_check_config_management "$SITENAME" "$MULTIDEV"
+    ;;
+
+  *)
+    echo -e "This script has no configuration management automation for $FRAMEWORK.  Unless this site has Quicksilver configured, you should probably just do everything manually."
+    ;;
+
+esac
 
 multidev_merge "$SITENAME" "$FRAMEWORK" $MULTIDEV
 multidev_delete "$SITENAME" "$MULTIDEV" 1

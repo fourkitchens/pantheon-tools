@@ -7,6 +7,9 @@ if [ -z ${FUNCTIONS_DIR+x} ]; then
 fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/pantheon-connection-mode"
+. "$FUNCTIONS_DIR/pantheon-commit"
+. "$FUNCTIONS_DIR/drupal8/drupal8-config-show-overridden"
 
 ##
 # Check if config needs to be exported.
@@ -15,10 +18,14 @@ fi
 #   The machine name of the site.
 # @param string $MULTIDEV
 #   The machine name of the multidev.
+# @param int $CHECKFOROVERRIDES
+#   Should the list of overrides be displayed?
+#   In some scenarios they have already been shown.
 ##
 drupal_config_export() {
   local sitename=$1
   local multidev=$2
+  local checkforoverrides=$3
   local continue
 
   echo -e "Clearing caches."
@@ -28,23 +35,26 @@ drupal_config_export() {
   if [ $? != 0 ]; then
     error_no_cleanup "Error running drush entity-updates." 15
   fi
-  echo -e "Checking if config needs to be exported."
-  # @todo Need to account for skipped modules.
-  local overridden=`terminus drush ${sitename}.${multidev} -- config-import -n --preview=list 2>/dev/null  | fgrep -v 'Import the listed configuration changes?'`
-  if [ "$overridden" != "" ]; then
 
-    echo -e "The following config is overridden:"
-    echo -e "$overridden"
-    read -p "${UNDERLINE}Should these overrides be exported to code before continuing with the merge? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}"  export
+  if [ "$checkforoverrides" == 1]; then
+    echo -e "Checking if config needs to be exported."
+    local isoverridden=0
+    drupal_config_show_overridden $sitename $multidev isoverridden
+  fi
+
+  if [ "$isoverridden" == 1 ] || [ "$checkforoverrides" == 0 ]; then
+    read -p "${UNDERLINE}Should these overrides be exported to code before continuing? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}"  export
     case $export in
       [Nn]) ;;
       *)
+        connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
         echo -e "Exporting config:"
-        terminus -q drush ${sitename}.${multidev} -- features-update-all -y
+        terminus -q drush ${sitename}.${multidev} -- config-export -y
         if [ $? != 0 ]; then
-          cleanup_on_error $sitename $multidev "Error regenerating configuration." 12
+          cleanup_on_error $sitename $multidev "Error exporting configuration." 12
         fi
         commit $sitename $multidev "Regenerated configuration."
+        connection_mode "$SITENAME" "$MULTIDEV" 'git'
         ;;
     esac
   fi

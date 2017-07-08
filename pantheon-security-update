@@ -72,7 +72,7 @@ multidev_update() {
       connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
       drupal8_update $sitename $multidev
       if [ "$hasconfigmanagement" == 1 ]; then
-        drupal_config_export $sitename $multidev
+        drupal_config_export $sitename $multidev 1
       fi
       connection_mode "$SITENAME" "$MULTIDEV" 'git'
       ;;
