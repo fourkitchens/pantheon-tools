@@ -35,7 +35,8 @@ fi
 
 case $FRAMEWORK in
   drupal)
-    drupal_check_features "$SITENAME" "$MULTIDEV"
+    hasfeatures=''
+    drupal_check_features "$SITENAME" "$MULTIDEV" hasfeatures
     ;;
 
   drupal8)
