@@ -26,7 +26,7 @@ git pull
 ```
 2. The scripts are totally interactive.  Just run them.  E.g.:
 ```
-pantheon-update
+pantheon-security-update
 ```
 
 ## Scripts
