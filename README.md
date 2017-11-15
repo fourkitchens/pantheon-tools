@@ -35,6 +35,14 @@ pantheon-security-update
 
 Run security updates on a Pantheon site by first creating a new multi-dev environment.
 
+### pantheon-multidev-create
+
+Create a new multi-dev environment.
+
+### pantheon-multidev-merge
+
+Merge a multi-dev environment into master (the dev environment).
+
 ### pantheon-quick-deploy
 
 Quickly deploy something from dev->test->live.
