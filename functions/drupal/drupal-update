@@ -43,6 +43,8 @@ drupal_update() {
   echo -e "  e.g. 7.x-2.4 to 7.x-3.0"
   echo -e "* Upgrading an alpha or dev module."
   echo -e "  e.g. 7.x-1.0-alpha3 to 7.x-1.0-beta2"
+  echo -e "* Upgrading a beta module that is complex."
+  echo -e "  e.g. Media 7.x-2.0-beta4 to 7.x-2.14"
   echo -e "These should be done as billable work. And might involve back-porting patches rather than running upgrades."
 
   # @todo It would require less interaction if we did this a bit differently:
