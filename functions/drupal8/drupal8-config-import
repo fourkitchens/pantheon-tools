@@ -7,6 +7,7 @@ if [ -z ${FUNCTIONS_DIR+x} ]; then
 fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/drupal8/drupal8-should-use-config-split"
 
 ##
 # Import config from code to DB.
@@ -22,11 +23,18 @@ drupal_config_import() {
   local sitename=$1
   local env=$2
   local continue
+  local shoulduseconfigsplit=0
+
+  drupal_should_use_config_split $sitename $env shoulduseconfigsplit
 
   echo -e "Importing Configuration."
-  terminus -q drush ${sitename}.${env} -- config-split-import -y
+  if [ "$shoulduseconfigsplit" == 1 ]; then
+    terminus -q drush ${sitename}.${env} -- config-split-import -y
+  else
+    terminus -q drush ${sitename}.${env} -- config-import -y
+  fi
   if [ $? != 0 ]; then
-    error_no_cleanup "Error running drush config-split-import." 15
+    error_no_cleanup "Error Importing configuration." 15
   fi
   echo -e "Updating entities."
   terminus -q drush ${sitename}.${env_dest} -- entity-updates -y

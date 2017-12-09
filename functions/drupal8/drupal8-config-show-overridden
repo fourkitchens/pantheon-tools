@@ -7,6 +7,7 @@ if [ -z ${FUNCTIONS_DIR+x} ]; then
 fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/drupal8/drupal8-should-use-config-split"
 
 ##
 # Show the overridden config.
@@ -24,25 +25,21 @@ drupal_config_show_overridden() {
   local sitename=$1
   local env=$2
   local isoverridden=1
+  local shoulduseconfigsplit=0
 
-  echo -e "Checking Drush version."
-  local version=`terminus drush ${sitename}.${multidev} -- --version --pipe`
-  local versionmajor=${version%%.*}
-  local versionrest=${version#*.}
-  local versionminor=${versionrest%%.*}
-  local versionpoint=${versionrest#*.}
+  drupal_should_use_config_split $sitename $env shoulduseconfigsplit
 
-  # Drush cim only works to show overridden Config Split in Drush >= 8.1.10
-  if [[ $versionminor < 1 ]] || [[ $versionminor -eq 1 && $versionpoint -lt 10 ]]; then
+  if [ "$shoulduseconfigsplit" == 1 ]; then
     echo -e "Config differences can't be shown on the command line.  Instead, use the link below."
-    local link=`terminus drush ${sitename}.${multidev} -- user-login 1 '/admin/config/development/configuration' 2>/dev/null`
+    local link=`terminus drush ${sitename}.${env} -- user-login 1 '/admin/config/development/configuration' 2>/dev/null`
     echo -e "  $link"
     return
   else
-    local overridden=`terminus drush ${sitename}.${multidev} -- config-import -n --preview=list 2>/dev/null  | fgrep -v 'Import the listed configuration changes?'`
+    echo -e "Checking for overridden config."
+    local overridden=`terminus drush ${sitename}.${env} -- config-import -n --preview=list  2>/dev/null | fgrep -v "There are no changes to import" | fgrep -v 'Import the listed configuration changes?'`
     if [ "$overridden" != "" ]; then
       echo -e "$overridden"
-      cleanup_on_error $sitename $multidev "There are config overrides.  These should be cleaned up first. Probably just run \`drush config-import\`." 8
+      isoverridden=1
     else
       isoverridden=0
     fi

@@ -40,7 +40,8 @@ case $FRAMEWORK in
     ;;
 
   drupal8)
-    drupal8_check_config_management "$SITENAME" "$MULTIDEV"
+    hasconfigmanagement=''
+    drupal8_check_config_management "$SITENAME" "$MULTIDEV" hasconfigmanagement
     ;;
 
   *)

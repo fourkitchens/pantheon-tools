@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+if [ -z ${FUNCTIONS_DIR+x} ]; then
+  FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
+  if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
+fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+
+##
+# Does this site use an old version of Drush where we need to csim instead of cim?
+#
+# @param string $SITENAME
+#   The machine name of the site.
+# @param string $ENV
+#   The machine name of the environment.
+# @param int $SHOULDUSECONFIGSPLIT
+#   Should you use config split?  TRUE== 1, FALSE == 0
+##
+drupal_should_use_config_split() {
+  local sitename=$1
+  local env=$2
+  local shoulduseconfigsplit=0
+
+  echo -e "Checking Drush version."
+  local version=`terminus drush ${sitename}.${multidev} -- --version --pipe  2>/dev/null`
+  local versionmajor=${version%%.*}
+  local versionrest=${version#*.}
+  local versionminor=${versionrest%%.*}
+  local versionpoint=${versionrest#*.}
+
+  # Drush cim only works to show overridden Config Split in Drush >= 8.1.10
+  if [[ $versionminor < 1 ]] || [[ $versionminor -eq 1 && $versionpoint -lt 10 ]]; then
+    shoulduseconfigsplit=0
+  fi
+  eval "$3='$shoulduseconfigsplit'"
+}
