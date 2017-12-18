@@ -59,7 +59,7 @@ env_merge() {
   fi
   case $framework in
     drupal)
-      echo -e "Updating the database."
+      echo -e "Checking for database updates."
       terminus -q drush ${sitename}.${env_dest} -- updatedb -y
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
@@ -74,7 +74,7 @@ env_merge() {
       fi
       ;;
     drupal8)
-      echo -e "Updating the database."
+      echo -e "Checking for database updates."
       terminus -q drush ${sitename}.${env_dest} -- updatedb -y
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
