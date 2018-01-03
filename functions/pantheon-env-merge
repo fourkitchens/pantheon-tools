@@ -50,7 +50,7 @@ env_merge() {
   fi
 
   if [ $? != 0 ]; then
-    error_no_cleanup "Error merging ${sitename}: ${env_dest} to ${env_dest}.  If there were merge conflicts you will need to merge locally." 13
+    error_no_cleanup "Error merging ${sitename}: ${env_source} to ${env_dest}.  If there were merge conflicts you will need to merge locally." 13
   fi
   echo -e "Clearing caches."
   terminus -q env:clear-cache ${sitename}.${env_dest}
