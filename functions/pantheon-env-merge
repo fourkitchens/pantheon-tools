@@ -37,10 +37,10 @@ env_merge() {
 
   if [ "$env_source" == "dev" ] && [ "$env_dest" != "test" ]; then
     echo -e "First merging ${sitename}: ${env_source} to ${env_dest}."
-    terminus -q multidev:merge-from-dev ${sitename}.${env_dest}
+    terminus multidev:merge-from-dev ${sitename}.${env_dest}
   elif [ "$env_dest" == "dev" ]; then
     echo -e "Merging ${sitename}: ${env_source} to ${env_dest}."
-    terminus -q multidev:merge-to-dev ${sitename}.${multidev}
+    terminus multidev:merge-to-dev ${sitename}.${multidev}
   else
     # @todo Ask for backup
     # @todo Ask for sync
