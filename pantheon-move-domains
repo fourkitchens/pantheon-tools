@@ -1,0 +1,65 @@
+#!/bin/bash
+# Bash script to move custom domains from one site to another.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-terminus-check"
+. "$DIR/functions/pantheon-authenticate"
+. "$DIR/functions/pantheon-choose-site"
+
+#set -x
+
+terminus_check
+terminus_authenticate
+
+echo -e "First choose a site + environment to move the domains from."
+SOURCESITENAME=''
+choose_site "" SOURCESITENAME
+
+SOURCEMULTIDEV=''
+terminus multidev:list $SOURCESITENAME
+read -p "${UNDERLINE}Type the name of a multidev to move the domains from, and press [Enter] to continue:?${NOUNDERLINE} " SOURCEMULTIDEV;
+
+echo -e "Choose a site + environment to move the domains to."
+DESTSITENAME=''
+choose_site "" DESTSITENAME
+
+DESTMULTIDEV=''
+terminus multidev:list $DESTSITENAME
+read -p "${UNDERLINE}Type the name of a multidev to move the domains to, and press [Enter] to continue:?${NOUNDERLINE} " DESTMULTIDEV;
+
+#SOURCESITENAME='episcopalassetmap'
+#SOURCEMULTIDEV='live'
+#DESTSITENAME='eam-d8'
+#DESTMULTIDEV='live'
+
+customdomains=`terminus domain:list ${SOURCESITENAME}.${SOURCEMULTIDEV} --field=id | sort | fgrep -v pantheon 2>/dev/null`
+echo -e "Custom domains:"
+echo -e "${customdomains}"
+read -p "${UNDERLINE}Move all these custom domains from ${SOURCESITENAME}.${SOURCEMULTIDEV} to ${DESTSITENAME}.${DESTMULTIDEV}?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+case $continue in
+  [Nn])
+    echo -e "Okay, bye."
+    exit 0
+    ;;
+  *) ;;
+esac
+
+for customdomain in $customdomains; do
+  echo -e "terminus domain:remove ${SOURCESITENAME}.${SOURCEMULTIDEV} $customdomain"
+  terminus domain:remove ${SOURCESITENAME}.${SOURCEMULTIDEV} $customdomain
+  if [ $? == 0 ]; then
+    echo -e "terminus domain:add ${DESTSITENAME}.${DESTMULTIDEV} $customdomain"
+    terminus domain:add ${DESTSITENAME}.${DESTMULTIDEV} $customdomain
+    if [ $? != 0 ]; then
+      echo -e "Ack! an error.  Bailing."
+      exit 1
+  else
+    echo -e "There was an error, not adding ${customdomain} to the new site."
+  fi
+done
+
+echo -e "Thanks.  All done."
+
