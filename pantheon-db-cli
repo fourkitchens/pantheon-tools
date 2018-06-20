@@ -45,5 +45,4 @@ mysql --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mys
 
 # Kill the SSH session.
 >&2 echo -e "--Now cleaning up the SSH connection.--"
-ps -fU $USER | grep "ssh -f" | grep "@dbserver" | awk '{print $2}' | xargs kill
-
+ps -fU `whoami` | grep "ssh -f" | grep "@$mysql_host" | awk '{print $2}' | xargs kill

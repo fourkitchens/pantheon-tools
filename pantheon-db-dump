@@ -46,5 +46,5 @@ mysqldump --no-autocommit --single-transaction --opt --quote-names --user=$mysql
 
 # Kill the SSH session.
 >&2 echo -e "--Now cleaning up the SSH connection.--"
-ps -fU $USER | grep "ssh -f" | grep "@dbserver" | awk '{print $2}' | xargs kill
+ps -fU `whoami` | grep "ssh -f" | grep "@$mysql_host" | awk '{print $2}' | xargs kill
 
