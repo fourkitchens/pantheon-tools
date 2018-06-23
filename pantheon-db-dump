@@ -39,10 +39,15 @@ terminus env:wake $1.$2
 #echo "ssh -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host"
 ssh -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host
 
+PV=''
+if command -v pv >/dev/null 2>&1; then
+  SIZE_BYTES=$(mysql --skip-column-names  --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database <<< 'SELECT ROUND(SUM(data_length) * 0.8) AS "size_bytes" FROM information_schema.TABLES;')
+  PV="pv --progress --timer --rate --size $SIZE_BYTES"
+fi
+
 #Transfer the Database.
 >&2 echo -e "--Now transfering the database.--"
-#echo "mysqldump -u$mysql_username -h127.0.0.1 -P$mysql_port -p$mysql_password $mysql_database"
-mysqldump --no-autocommit --single-transaction --opt --quote-names --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database
+mysqldump --no-autocommit --single-transaction --opt --quote-names --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database | $PV
 
 # Kill the SSH session.
 >&2 echo -e "--Now cleaning up the SSH connection.--"
