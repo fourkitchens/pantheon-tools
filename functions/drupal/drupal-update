@@ -86,8 +86,11 @@ drupal_update_list_modules_needing_update() {
 
   echo -e "Checking which modules need an update."
 
-  modulelist=`terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only --fields='short name' --pipe 2>/dev/null`
-  terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only 2>/dev/null | fgrep -v '[notice]'
+  # This command will output all sorts of errors if there's something weird
+  # going on with project names.  That's fine, we don't care in this case.  So
+  # Just filter out anything that doesn't look like a project name.
+  modulelist=`terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only --fields='short name' --pipe 2>/dev/null  | fgrep -v ' ' | fgrep -v '.' | fgrep -v '(' | fgrep -v ')'`
+  terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only 2>/dev/null | fgrep -v '[notice]' | fgrep -v 'Checking available'
 
   if [ "$modulelist" ]; then
     echo -e ""
