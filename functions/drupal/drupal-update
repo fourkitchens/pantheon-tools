@@ -131,7 +131,7 @@ drupal_update_module() {
   fi
 
   echo "Updating the database for $module..."
-  terminus drush ${sitename}.${multidev} -- updatedb -y 2>1 | fgrep -v 'This environment is in read-only Git mode'
+  terminus drush ${sitename}.${multidev} -- updatedb -y 2>&1 | fgrep -v 'This environment is in read-only Git mode'  | fgrep -v '[Exit: 0]'
   if [ $? != 0 ]; then
     cleanup_on_error $sitename $multidev "error updating the database." 10
   fi

@@ -150,7 +150,7 @@ function multidev_upstream_update() {
       echo -e "${UNDERLINE}You will likely need to re-apply any patches to core $framework.${NOUNDERLINE}"
     fi
     if [ $framework == 'drupal' ]  || [ $framework == 'drupal8' ]; then
-      terminus drush ${sitename}.${multidev} -- updatedb -y 2>1 | fgrep -v 'This environment is in read-only Git mode'
+      terminus drush ${sitename}.${multidev} -- updatedb -y 2>&1 | fgrep -v 'This environment is in read-only Git mode' | fgrep -v '[Exit: 0]'
       if [ $? != 0 ]; then
         cleanup_on_error $sitename $multidev "error updating the database." 10
       fi

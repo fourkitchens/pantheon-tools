@@ -60,7 +60,7 @@ env_merge() {
   case $framework in
     drupal)
       echo -e "Checking for database updates."
-      terminus drush ${sitename}.${env_dest} -- updatedb -y 2>1 | fgrep -v 'This environment is in read-only Git mode'
+      terminus drush ${sitename}.${env_dest} -- updatedb -y 2>&1 | fgrep -v 'This environment is in read-only Git mode'  | fgrep -v '[Exit: 0]'
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
       fi
@@ -75,7 +75,7 @@ env_merge() {
       ;;
     drupal8)
       echo -e "Checking for database updates."
-      terminus drush ${sitename}.${env_dest} -- updatedb -y 2>1 | fgrep -v 'This environment is in read-only Git mode'
+      terminus drush ${sitename}.${env_dest} -- updatedb -y 2>&1 | fgrep -v 'This environment is in read-only Git mode' | fgrep -v '[Exit: 0]'
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
       fi
