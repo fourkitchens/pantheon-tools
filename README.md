@@ -58,3 +58,8 @@ Dump a database from any Pantheon site.  Even VIP clients that require an SSH tu
 ### pantheon-db-cli
 
 Connect to the database of any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database.
+
+### pantheon-sites-report
+
+Get a report about all sites listing some metric (e.g. PHP version, upstream, etc.).
+

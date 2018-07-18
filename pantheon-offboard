@@ -1,0 +1,70 @@
+#!/bin/bash
+# Bash script to offboard a staff member:
+# * Remove them from the Pantheon organization
+# * Remove them from each site
+# * Block any user account in each environment.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-get-framework"
+
+#set -x
+
+EMAIL=$1
+if [ "$EMAIL" == "" ]; then
+  read -p "${UNDERLINE}What email address should be offboarded?${NOUNDERLINE} " EMAIL
+fi
+
+echo "Note that to prevent you from poking out your eyes, either this Terminus issue needs to be solved, or you need to apply the patch from there."
+echo "  https://github.com/pantheon-systems/terminus/issues/1873"
+
+echo ""
+echo "$EMAIL will be:"
+echo "* Removed from your Pantheon organization."
+echo "* Removed from all Pantheon sites."
+echo "* Blocked in all environments."
+echo ""
+
+CONFIRM=$2
+if [ "$CONFIRM" != "y" ]; then
+  read -p "${UNDERLINE}Confirm (Y/${BOLD}N${NOBOLD}) ${NOUNDERLINE}"  confirm
+  case $confirm in
+    [Yy]) ;;
+    *)
+      echo "abort."
+      exit
+      ;;
+  esac
+fi
+
+echo "This will take a really long time..."
+
+sites=`terminus site:list --format=list --field=name | sort`
+
+for site in $sites; do
+  FRAMEWORK=''
+  get_framework "$site" FRAMEWORK
+  case $FRAMEWORK in
+    drupal|drupal8)
+      environments=`terminus env:list $site --format=list --field=id`
+      for environment in $environments; do
+        echo "Blocking from $site.$environment"
+        # Need to '-q' to avoid 'Unable to find a matching user' error.
+        terminus -y -q drush ${site}.${environment} -- user-block $EMAIL
+      done
+      ;;
+  esac
+  echo "Removing from $site"
+  terminus -y site:team:remove $site $EMAIL
+done
+
+organizations=`terminus org:list --format=list --field=name`
+for organization in $organizations; do
+  echo "Removing from $organization"
+  terminus org:people:remove $organization $EMAIL
+done
+
+echo -e "Thanks.  All done."
+

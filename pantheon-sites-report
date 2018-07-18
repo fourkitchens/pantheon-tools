@@ -1,0 +1,29 @@
+#!/bin/bash
+# Bash script to get a report of all sites about a certain feature.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+
+#set -x
+
+REPORTTYPE=$1
+if [ "$REPORTTYPE" == "" ]; then
+  read -p "${UNDERLINE}What do you want a report about? One of [${BOLD}php_version${NOBOLD}, framework, organization, service_level, max_num_cdes, upstream, frozen]:${NOUNDERLINE} " REPORTTYPE
+  REPORTTYPE="${REPORTTYPE:-php_version}"
+fi
+
+SITES=`terminus site:list --format=list --field=name | sort`
+
+for SITE in $SITES; do
+  if [ "$REPORTTYPE" == "php_version" ]; then
+    echo -n "$SITE "
+    terminus env:info $SITE.live --format=string --fields=php_version 2>&1
+  else
+    terminus site:info $SITE --format=string --fields=name,$REPORTTYPE
+  fi
+done
+
+echo -e "Thanks.  All done."
+
