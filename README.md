@@ -61,5 +61,9 @@ Connect to the database of any Pantheon site.  Even VIP clients that require an 
 
 ### pantheon-sites-report
 
-Get a report about all sites listing some metric (e.g. PHP version, upstream, etc.).
+Get a metric about all sites (e.g. PHP version, or Upstream).
+
+### pantheon-offboard
+
+Offboard a staff member from your organization.
 
