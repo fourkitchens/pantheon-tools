@@ -82,7 +82,7 @@ multidev_update() {
       read -p "${UNDERLINE}Continue [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
       case $continue in
         [Nn])
-          echo -e "You may run the \`pantheon-merge\` script when you are ready to merge and deploy."
+          echo -e "You may run the \`pantheon-multidev-merge\` script when you are ready to merge and deploy."
           exit 0
           ;;
         *) ;;
@@ -100,7 +100,7 @@ multidev_update() {
   read -p "${UNDERLINE}Merge?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
   case $continue in
     [Nn])
-      echo -e "You may run the \`pantheon-merge\` script when you are ready to merge and deploy."
+      echo -e "You may run the \`pantheon-multidev-merge\` script when you are ready to merge and deploy."
       exit 0
       ;;
     *) ;;
@@ -138,7 +138,7 @@ function multidev_upstream_update() {
       case $continue in
         [Nn])
           echo -e "You can re-run this script when you've resolved the problem and want to run updates for contrib modules."
-          echo -e "Or you can run the \`pantheon-merge\` script if you just want to merge and deploy."
+          echo -e "Or you can run the \`pantheon-multidev-merge\` script if you just want to merge and deploy."
           exit 0
           ;;
         *) ;;
