@@ -61,7 +61,7 @@ env_merge() {
     if [ "$source_branch" == "dev" ]; then
       source_branch='master'
     fi
-    error_no_cleanup "Error merging ${sitename}: ${env_source} to ${env_dest}.  If there were merge conflicts you will need to merge locally using \n  git checkout $destination_branch\n  git pull\n  git merge --no-ff --strategy=$merge_strategy origin/$source_branch\nAnd follow the instructions shown for resolving conflicts." 13
+    error_no_cleanup "Error merging ${sitename}: ${env_source} to ${env_dest}.  If there were merge conflicts you will need to merge locally using \n  git checkout $destination_branch\n  git pull\n  git merge --no-ff --strategy=$merge_strategy origin/$source_branch\nFollow the instructions shown for resolving conflicts.\nRun the front-end or back-end build if the conflicts were in generated code.\nConfirm that everything works locally.\n  git push\nRe-run this script." 13
   fi
   echo -e "Clearing caches."
   terminus -q env:clear-cache ${sitename}.${env_dest}
