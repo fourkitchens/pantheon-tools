@@ -45,12 +45,23 @@ env_merge() {
     # @todo Ask for backup
     # @todo Ask for sync
     # @todo Ask for deploy note.
-    echo -e "Merging ${sitename}: ${env_source} to ${env_dest}."
+    echo -e "Deploying ${sitename}: ${env_source} to ${env_dest}."
     terminus -q env:deploy ${sitename}.${env_dest} --sync-content --cc
   fi
 
   if [ $? != 0 ]; then
-    error_no_cleanup "Error merging ${sitename}: ${env_source} to ${env_dest}.  If there were merge conflicts you will need to merge locally." 13
+    # @todo Different error handling for deploying.
+    destination_branch=$env_dest
+    merge_strategy='ours'
+    if [ "$destination_branch" == "dev" ]; then
+      destination_branch='master'
+      merge_strategy='theirs'
+    fi
+    source_branch=$env_source
+    if [ "$source_branch" == "dev" ]; then
+      source_branch='master'
+    fi
+    error_no_cleanup "Error merging ${sitename}: ${env_source} to ${env_dest}.  If there were merge conflicts you will need to merge locally using \n  git checkout $destination_branch\n  git pull\n  git merge --no-ff --strategy=$merge_strategy origin/$source_branch\nAnd follow the instructions shown for resolving conflicts." 13
   fi
   echo -e "Clearing caches."
   terminus -q env:clear-cache ${sitename}.${env_dest}
