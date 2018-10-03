@@ -90,7 +90,7 @@ drupal_update_list_modules_needing_update() {
   # going on with project names.  That's fine, we don't care in this case.  So
   # Just filter out anything that doesn't look like a project name.
   modulelist=`terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only --fields='short name' --pipe 2>/dev/null  | fgrep -v ' ' | fgrep -v '.' | fgrep -v '(' | fgrep -v ')'`
-  terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only 2>/dev/null | fgrep -v '[notice]' | fgrep -v 'Checking available'
+  terminus drush ${sitename}.${multidev} -- pm-updatestatus --security-only 2>/dev/null | fgrep -v '[notice]' | fgrep -v 'Checking available' | fgrep -v ').' | fgrep -v 'No release history'
 
   if [ "$modulelist" ]; then
     echo -e ""
