@@ -59,6 +59,10 @@ Dump a database from any Pantheon site.  Even VIP clients that require an SSH tu
 
 Connect to the database of any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database.
 
+### pantheon-module-report
+
+Get a list of which sites use which version of a module.
+
 ### pantheon-sites-report
 
 Get a metric about all sites (e.g. PHP version, or Upstream).

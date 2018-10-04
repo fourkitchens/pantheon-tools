@@ -1,0 +1,55 @@
+#!/bin/bash
+# Bash script to get a report of which sites are running a module, at which version.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-get-framework"
+
+#set -x
+
+MODULE=$1
+if [ "$MODULE" == "" ]; then
+  read -p "${UNDERLINE}What module do you want a report about? Enter its machine name.  e.g. print:${NOUNDERLINE} " MODULE
+fi
+
+VERBOSITY=$2
+if [ "$VERBOSITY" == "" ]; then
+  read -p "${UNDERLINE}Include sites that don't have the module (Y/${BOLD}N${NOBOLD}) ${NOUNDERLINE}"  VERBOSITY
+  case $VERBOSITY in
+    [Yy]) ;;
+    *)
+      VERBOSITY=n
+      ;;
+  esac
+fi
+
+sites=`terminus site:list --format=list --field=name | sort`
+
+for site in $sites; do
+  FRAMEWORK=''
+  get_framework "$site" FRAMEWORK
+  case $FRAMEWORK in
+    drupal|drupal8)
+      status=`terminus drush ${site}.live -- pm-info --fields=extension,version --format=csv $MODULE 2>/dev/null | fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added the' | fgrep -v 'Permission denied'`
+      trydev=`echo $status | grep 'needs a higher bootstrap level\|command terminated abnormally'`
+      if [ "$trydev" ]; then
+        status=`terminus drush ${site}.dev -- pm-info --fields=extension,version --format=csv $MODULE 2>/dev/null | fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added' | fgrep -v 'Permission denied'`
+      fi
+      if [ "$status" == "" ] && [ $VERBOSITY == 'y' ]; then
+        echo "$site : not found"
+      elif [ "$status" ]; then
+        echo "$site : $status"
+      fi
+      ;;
+    *)
+      if [ $VERBOSITY == 'y' ]; then
+        echo "$site : not drupal"
+      fi
+      ;;
+  esac
+done
+
+echo -e "Thanks.  All done."
+
