@@ -16,7 +16,7 @@ fi
 
 VERBOSITY=$2
 if [ "$VERBOSITY" == "" ]; then
-  read -p "${UNDERLINE}Include sites that don't have the module (Y/${BOLD}N${NOBOLD}) ${NOUNDERLINE}"  VERBOSITY
+  read -p "${UNDERLINE}Also list sites that don't have the module? (Y/${BOLD}N${NOBOLD}) ${NOUNDERLINE}"  VERBOSITY
   case $VERBOSITY in
     [Yy]) ;;
     *)
