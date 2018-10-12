@@ -1,0 +1,70 @@
+#!/bin/bash
+# Bash script to deploy a Pantheon site to the dev or live environment.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-terminus-check"
+. "$DIR/functions/pantheon-authenticate"
+. "$DIR/functions/pantheon-choose-site"
+. "$DIR/functions/pantheon-get-framework"
+. "$DIR/functions/pantheon-env-merge"
+. "$DIR/functions/drupal/drupal-check-features"
+. "$DIR/functions/drupal8/drupal8-check-config-management"
+
+#set -x
+
+SUGGESTEDSITENAME=$1
+if [ "$SUGGESTEDSITENAME" == "" ]; then
+  terminus_check
+  terminus_authenticate
+fi
+SITENAME=''
+choose_site "$SUGGESTEDSITENAME" SITENAME
+FRAMEWORK=''
+get_framework "$SITENAME" FRAMEWORK
+
+TARGETENV=$2
+if [ "$TARGETENV" == "" ]; then
+    terminus multidev:list $SITENAME
+    read -p "${UNDERLINE}Type the name of an environment to deploy to, and press [Enter] to continue:? (test/live)${NOUNDERLINE} " TARGETENV;
+fi
+
+case $TARGETENV in
+  test)
+    SOURCEENV='dev'
+    echo -e "Will deploy $SITENAMEfrom dev to test"
+    ;;
+  live)
+    SOURCEENV='test'
+    echo -e "Will deploy $SITENAMEfrom test to live"
+    ;;
+  *)
+    echo -e "You can only deploy to test or dev.  Maybe you want the pantheon-multidev-merge script instead?"
+    exit 1;
+    ;;
+esac
+
+
+case $FRAMEWORK in
+  drupal)
+    hasfeatures=''
+    drupal_check_features "$SITENAME" "$SOURCEENV" hasfeatures
+    ;;
+
+  drupal8)
+    hasconfigmanagement=''
+    drupal8_check_config_management "$SITENAME" "$SOURCEENV" hasconfigmanagement
+    ;;
+
+  *)
+    echo -e "This script has no configuration management automation for $FRAMEWORK.  Unless this site has Quicksilver configured, you should probably just do everything manually."
+    ;;
+
+esac
+
+env_merge $SITENAME $FRAMEWORK $SOURCEENV $TARGETENV
+
+echo -e "Thanks.  All done."
+

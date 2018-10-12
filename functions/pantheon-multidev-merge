@@ -6,7 +6,6 @@ if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-error-no-cleanup"
 . "$FUNCTIONS_DIR/pantheon-env-merge"
-. "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
 
 ##
 # Merge a multi-dev to dev.

@@ -40,13 +40,35 @@ env_merge() {
     terminus multidev:merge-from-dev ${sitename}.${env_dest}
   elif [ "$env_dest" == "dev" ]; then
     echo -e "Merging ${sitename}: ${env_source} to ${env_dest}."
-    terminus multidev:merge-to-dev ${sitename}.${multidev}
+    terminus multidev:merge-to-dev ${sitename}.${env_source}
   else
-    # @todo Ask for backup
-    # @todo Ask for sync
-    # @todo Ask for deploy note.
+    if [ "$env_dest" == 'live' ]; then
+      read -p "${UNDERLINE}First backup the live database?:[${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " backup;
+      case $backup in
+        [Nn]) ;;
+        *)
+          terminus backup:create ${sitename}.${env_dest} --element=database
+          ;;
+      esac
+    fi
+
+
+    $synccontent=''
+    if [ "$env_dest" == 'test' ]; then
+      read -p "${UNDERLINE}First copy the database and files from live to test?:[${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " sync;
+      case $sync in
+        [Nn]) ;;
+        *)
+          $synccontent='--sync-content'
+          ;;
+      esac
+    fi
+
+    echo -e "Typically include the ticket title and URL in the deploy message."
+    read -p "${UNDERLINE}Deployment message:${NOUNDERLINE} " deploymessage;
+
     echo -e "Deploying ${sitename}: ${env_source} to ${env_dest}."
-    terminus -q env:deploy ${sitename}.${env_dest} --sync-content --cc
+    terminus env:deploy ${sitename}.${env_dest} $synccontent --note "$deploymessage"
   fi
 
   if [ $? != 0 ]; then
@@ -63,6 +85,7 @@ env_merge() {
     fi
     error_no_cleanup "Error merging ${sitename}: ${env_source} to ${env_dest}.  If there were merge conflicts you will need to merge locally using \n  git checkout $destination_branch\n  git pull\n  git merge --no-ff --strategy=$merge_strategy origin/$source_branch\nFollow the instructions shown for resolving conflicts.\nRun the front-end or back-end build if the conflicts were in generated code.\nConfirm that everything works locally.\n  git push\nRe-run this script." 13
   fi
+
   echo -e "Clearing caches."
   terminus -q env:clear-cache ${sitename}.${env_dest}
   if [ "$env_dest" == "test" ] || [ "$env_dest" == "dev" ]; then

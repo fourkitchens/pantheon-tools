@@ -189,9 +189,7 @@ echo -e "Thanks.  All done."
 # @todo
 # Deploy to the test env. (copying DB/Files from live)
 # Pause again and ask to continue.
-# A full backup of production database and files
 # Deploy to live.
 # Show the status report
 #
-# @todo Core updates via a terminus command rather than drush
 # @todo Show `drush uli` links with all URLs.
