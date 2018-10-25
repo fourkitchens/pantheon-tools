@@ -47,19 +47,19 @@ env_merge() {
       case $backup in
         [Nn]) ;;
         *)
+          echo -e "Backing up."
           terminus backup:create ${sitename}.${env_dest} --element=database
           ;;
       esac
     fi
 
-
-    $synccontent=''
+    synccontent=''
     if [ "$env_dest" == 'test' ]; then
       read -p "${UNDERLINE}First copy the database and files from live to test?:[${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " sync;
       case $sync in
         [Nn]) ;;
         *)
-          $synccontent='--sync-content'
+          synccontent='--sync-content'
           ;;
       esac
     fi

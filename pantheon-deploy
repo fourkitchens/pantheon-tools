@@ -27,8 +27,8 @@ get_framework "$SITENAME" FRAMEWORK
 
 TARGETENV=$2
 if [ "$TARGETENV" == "" ]; then
-    terminus multidev:list $SITENAME
-    read -p "${UNDERLINE}Type the name of an environment to deploy to, and press [Enter] to continue:? (test/live)${NOUNDERLINE} " TARGETENV;
+  terminus multidev:list $SITENAME  | grep " dev \| test \| live \| ID \|--"
+  read -p "${UNDERLINE}Type the name of an environment to deploy to, and press [Enter] to continue:? (test/live)${NOUNDERLINE} " TARGETENV;
 fi
 
 case $TARGETENV in

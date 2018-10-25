@@ -71,3 +71,6 @@ Get a metric about all sites (e.g. PHP version, or Upstream).
 
 Offboard a staff member from your organization.
 
+### pantheon-deploy
+
+Deploy dev->test or test->live.
