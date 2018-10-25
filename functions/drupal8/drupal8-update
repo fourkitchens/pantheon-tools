@@ -31,20 +31,17 @@ drupal8_update() {
   if [ $installprofile == "" ]; then
     echo -e "${INVERSE}Warning${NOINVERSE} The install profile could not be determined.  Some install profiles cannot be updated with Drush.  Proceed with caution."
     echo -e ""
-  fi
+  fii
+  # @todo also need a way to either check for composer managed packages, or to upgrade via composer.
   if [ $installprofile == "lightning" ]; then
     echo -e "${INVERSE}This site uses the Lightning distribution.${NOINVERSE}"
-    echo -e "Drupal Core, and the contributed modules included with Lightning "
+    echo -e "Drupal Core, and the contributed modules with Lightning "
     echo -e "cannot be upgraded using Drush.  Please upgrade a local copy of the"
     echo -e "site using the instructions at:"
-    echo -e "  /code/profiles/lightning/UPDATE.md"
+    echo -e "  https://docs.google.com/document/d/1TI87rN2LpdB_2q3c4mx9CPWzYCQYDkxwBTztjMkDsR0"
     echo -e "You can still use this branch/multi-dev."
     echo -e ""
-    echo -e "You may still use this script to upgrade any contrib modules that "
-    echo -e "are not included with Lightning. In the report for below, look at "
-    echo -e "the installation paths.  Modules included with Lightning are in "
-    echo -e "  profiles/lightning/*"
-    echo -e ""
+    return
   fi
 
   terminus -q drush ${sitename}.${multidev} -- pm-refresh -q
