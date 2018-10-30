@@ -182,14 +182,27 @@ multidev_update "$SITENAME" "$FRAMEWORK" $MULTIDEV
 multidev_merge "$SITENAME" "$FRAMEWORK" $MULTIDEV
 multidev_delete "$SITENAME" "$MULTIDEV" 1
 
-echo -e "${UNDERLINE}Sorry, the deploying and backup part hasn't been written yet. Use the Pantheon dashboard. But also run \`drush cc all\`, \`drush updb\`, and \`drush fra\`${NOUNDERLINE}"
-echo -e
+read -p "${UNDERLINE}Deploy to the test environment?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+case $continue in
+  [Nn])
+    echo -e "You can run the \`pantheon-deploy\` script when you're ready."
+    exit 0
+    ;;
+  *) ;;
+esac
+${BASH_SOURCE%/*}/pantheon-deploy "$SITENAME" "test"
+
+read -p "${UNDERLINE}Deploy to the live environment?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
+case $continue in
+  [Nn])
+    echo -e "You can run the \`pantheon-deploy\` script when you're ready."
+    exit 0
+    ;;
+  *) ;;
+esac
+${BASH_SOURCE%/*}/pantheon-deploy "$SITENAME" "live"
+
 echo -e "Thanks.  All done."
 
-# @todo
-# Deploy to the test env. (copying DB/Files from live)
-# Pause again and ask to continue.
-# Deploy to live.
-# Show the status report
-#
+# @todo show the status report
 # @todo Show `drush uli` links with all URLs.
