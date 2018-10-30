@@ -44,7 +44,7 @@ drupal8_check_config_management() {
 
   eval "$3='$hasconfigmanagement'"
 
-  echo -e "Checking if config is overridden."
+  echo -e "Checking if config is overridden on ${multidev}."
   local isoverridden=0
   drupal_config_show_overridden $sitename $multidev isoverridden
   if [ "$isoverridden" == 1 ]; then

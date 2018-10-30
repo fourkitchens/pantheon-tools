@@ -41,7 +41,7 @@ case $TARGETENV in
     echo -e "Will deploy $SITENAMEfrom test to live"
     ;;
   *)
-    echo -e "You can only deploy to test or dev.  Maybe you want the pantheon-multidev-merge script instead?"
+    echo -e "You can only deploy to test or live.  Maybe you want the pantheon-multidev-merge script instead?"
     exit 1;
     ;;
 esac

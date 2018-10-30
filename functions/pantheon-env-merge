@@ -33,7 +33,7 @@ env_merge() {
 
   # @todo Ask to continue if there's undeployed code.  Test using `terminus env:code-log ${sitename}.dev`.
 
-  # @todo Test for clean config in the source.
+  # @todo Test for clean config in the destination.
 
   if [ "$env_source" == "dev" ] && [ "$env_dest" != "test" ]; then
     echo -e "First merging ${sitename}: ${env_source} to ${env_dest}."
@@ -59,6 +59,8 @@ env_merge() {
       case $sync in
         [Nn]) ;;
         *)
+          # @todo Instead of adding this flag, just do it manually.  Then we can tell if the deploy is taking
+          #       a long time due to the sync, or because something strange is going on.
           synccontent='--sync-content'
           ;;
       esac
