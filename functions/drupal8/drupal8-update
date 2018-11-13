@@ -31,7 +31,7 @@ drupal8_update() {
   if [ $installprofile == "" ]; then
     echo -e "${INVERSE}Warning${NOINVERSE} The install profile could not be determined.  Some install profiles cannot be updated with Drush.  Proceed with caution."
     echo -e ""
-  fii
+  fi
   # @todo also need a way to either check for composer managed packages, or to upgrade via composer.
   if [ $installprofile == "lightning" ]; then
     echo -e "${INVERSE}This site uses the Lightning distribution.${NOINVERSE}"
