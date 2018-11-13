@@ -37,8 +37,9 @@ drupal8_check_config_management() {
   echo -e "Checking if Configuration Split module is installed."
   drupal_check_if_module_installed $sitename $multidev "config_split"
   if [ $? == 0 ]; then
-    echo -e "{$INVERSE}This site is not using Configuration Split module.  Please set that up before continuing. See:{$NOINVERSE}"
+    echo -e "${INVERSE}This site is not using Configuration Split module.  Please set that up before continuing. See:${NOINVERSE}"
     echo -e "  https://www.advomatic.com/blog/using-configuration-split-to-have-dev-only-configuration-in-drupal-8"
+    echo -e "If you are running a security update, and this is indeed a really simple site, then you may be able to use the one-click update from the Pantheon dashboard."
     exit 8
   fi
 

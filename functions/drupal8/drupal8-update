@@ -40,8 +40,9 @@ drupal8_update() {
     echo -e "site using the instructions at:"
     echo -e "  https://docs.google.com/document/d/1TI87rN2LpdB_2q3c4mx9CPWzYCQYDkxwBTztjMkDsR0"
     echo -e "You can still use this branch/multi-dev."
+    echo -e "You may run the `pantheon-multidev-merge` script when you are ready to merge and deploy."
     echo -e ""
-    return
+    exit 1
   fi
 
   terminus -q drush ${sitename}.${multidev} -- pm-refresh -q
