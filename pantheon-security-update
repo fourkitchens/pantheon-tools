@@ -45,8 +45,8 @@ multidev_update() {
     drupal)
       local drushversion=''
       drupal_get_drush_version $sitename $framework $multidev drushversion
-      local hasfeatures=''
-      drupal_check_features $sitename $multidev hasfeatures
+      drupal_check_features $sitename $multidev
+      local hasfeatures=$?
       multidev_upstream_update $sitename $framework $multidev
       connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
       drupal_update $sitename $multidev
@@ -66,8 +66,8 @@ multidev_update() {
     drupal8)
       local drushversion=''
       drupal_get_drush_version $sitename $framework $multidev drushversion
-      local hasconfigmanagement=''
-      drupal8_check_config_management $sitename $multidev hasconfigmanagement
+      drupal8_check_config_management $sitename $multidev
+      local hasconfigmanagement=$?
       multidev_upstream_update $sitename $framework $multidev
       connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
       drupal8_update $sitename $multidev

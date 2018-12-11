@@ -49,13 +49,13 @@ esac
 
 case $FRAMEWORK in
   drupal)
-    hasfeatures=''
-    drupal_check_features "$SITENAME" "$SOURCEENV" hasfeatures
+    drupal_check_features "$SITENAME" "$SOURCEENV"
+    hasfeatures=$?
     ;;
 
   drupal8)
-    hasconfigmanagement=''
-    drupal8_check_config_management "$SITENAME" "$SOURCEENV" hasconfigmanagement
+    drupal8_check_config_management "$SITENAME" "$SOURCEENV"
+    hasconfigmanagement=$?
     ;;
 
   *)

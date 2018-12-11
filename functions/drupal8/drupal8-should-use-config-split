@@ -15,8 +15,9 @@ fi
 #   The machine name of the site.
 # @param string $ENV
 #   The machine name of the environment.
-# @param int $SHOULDUSECONFIGSPLIT
-#   Should you use config split?  TRUE== 1, FALSE == 0
+#
+# @return int
+#   1 if site uses old Drush, else 0.
 ##
 drupal_should_use_config_split() {
   local sitename=$1
@@ -32,7 +33,7 @@ drupal_should_use_config_split() {
 
   # Drush cim only works to show overridden Config Split in Drush >= 8.1.10
   if [[ $versionminor < 1 ]] || [[ $versionminor -eq 1 && $versionpoint -lt 10 ]]; then
-    shoulduseconfigsplit=0
+    shoulduseconfigsplit=1
   fi
-  eval "$3='$shoulduseconfigsplit'"
+  return $shoulduseconfigsplit
 }

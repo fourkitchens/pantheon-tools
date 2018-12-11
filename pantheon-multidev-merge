@@ -35,13 +35,13 @@ fi
 
 case $FRAMEWORK in
   drupal)
-    hasfeatures=''
-    drupal_check_features "$SITENAME" "$MULTIDEV" hasfeatures
+    drupal_check_features "$SITENAME" "$MULTIDEV"
+    hasfeatures=$?
     ;;
 
   drupal8)
-    hasconfigmanagement=''
-    drupal8_check_config_management "$SITENAME" "$MULTIDEV" hasconfigmanagement
+    drupal8_check_config_management "$SITENAME" "$MULTIDEV"
+    hasconfigmanagement=$?
     ;;
 
   *)

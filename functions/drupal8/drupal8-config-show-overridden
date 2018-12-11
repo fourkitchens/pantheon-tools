@@ -18,8 +18,6 @@ fi
 #   The machine name of the site.
 # @param string $ENV
 #   The machine name of the environment.
-# @param int $ISOVERRIDDEN
-#   Is the config overridden?  TRUE== 1, FALSE == 0.  If indeterminate, then 1.
 ##
 drupal_config_show_overridden() {
   local sitename=$1
@@ -27,13 +25,14 @@ drupal_config_show_overridden() {
   local isoverridden=1
   local shoulduseconfigsplit=0
 
-  drupal_should_use_config_split $sitename $env shoulduseconfigsplit
+  drupal_should_use_config_split $sitename $env
+  shoulduseconfigsplit=$?
 
   if [ "$shoulduseconfigsplit" == 1 ]; then
     echo -e "Config differences can't be shown on the command line.  Instead, use the link below."
     local link=`terminus drush ${sitename}.${env} -- user-login 1 '/admin/config/development/configuration' 2>/dev/null`
     echo -e "  $link"
-    return
+    exit 1
   else
     echo -e "Checking for overridden config."
     local overridden=`terminus drush ${sitename}.${env} -- config-import -n --preview=list  2>/dev/null | fgrep -v "There are no changes to import" | fgrep -v 'Import the listed configuration changes?'`
@@ -43,7 +42,6 @@ drupal_config_show_overridden() {
     else
       isoverridden=0
     fi
-    eval "$3='$isoverridden'"
-    return;
   fi
+  return $isoverridden
 }

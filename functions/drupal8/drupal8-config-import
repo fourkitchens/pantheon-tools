@@ -25,7 +25,8 @@ drupal_config_import() {
   local continue
   local shoulduseconfigsplit=0
 
-  drupal_should_use_config_split $sitename $env shoulduseconfigsplit
+  drupal_should_use_config_split $sitename $env
+  shoulduseconfigsplit=$?
 
   echo -e "Importing Configuration."
   if [ "$shoulduseconfigsplit" == 1 ]; then

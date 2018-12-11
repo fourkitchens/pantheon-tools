@@ -16,8 +16,9 @@ fi
 #   The machine name of the site.
 # @param string $MULTIDEV
 #   The machine name of the multidev.
-# @param $HASFEATURES
-#   Will be overwritten with the either 1 (true) or 0 (false).
+#
+# @return int
+#   1 if it has Features module, else 0.
 ###
 drupal_check_features() {
   local sitename=$1
@@ -28,13 +29,12 @@ drupal_check_features() {
   drupal_check_if_module_installed $sitename $multidev "features"
   if [ $? == 0 ]; then
     hasfeatures=0
-    eval "$3='$hasfeatures'"
-    return;
+    return $hasfeatures;
   fi
-  eval "$3='$hasfeatures'"
   echo -e "Checking that features are not overridden on ${multidev}."
   local overridden=`terminus drush ${sitename}.${multidev} -- features-list --status=enabled --fields=feature,state 2>/dev/null | grep 'Needs review\|Overridden'`
   if [ "$overridden" != "" ]; then
+    # @todo Instead ask to import the overrides.
     echo -e "$overridden"
     echo -e "There are features overrides.  These should be probably be cleaned up first.  You can do that on this branch.  Once cleaned up you can re-run this script to continue."
     read -p "${UNDERLINE}[${BOLD}y${NOBOLD}]es I want to quit and clean up manually. [n]o, I want to continue anyway. [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
@@ -43,5 +43,6 @@ drupal_check_features() {
       *)  exit 0 ;;
     esac
   fi
+  return $hasfeatures;
 }
 

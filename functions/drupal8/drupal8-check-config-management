@@ -12,26 +12,27 @@ fi
 . "$FUNCTIONS_DIR/drupal8/drupal8-config-export"
 
 ###
-# Determine Drush version.
+# Check if Config is overridden.
 #
 # @param string $SITENAME
 #   The machine name of the site.
 # @param string $MULTIDEV
 #   The machine name of the multidev.
-# @param $HASCONFIGMANAGEMENT
-#   Will be overwritten with the either 1 (true) or 0 (false).
+#
+# @return int
+#   1 if config is overridden, else 0.
 ###
 drupal8_check_config_management() {
   local sitename=$1
   local multidev=$2
   local hasconfigmanagement=1
+  local isoverridden=0
 
   echo -e "Checking if Config module is installed."
   drupal_check_if_module_installed $sitename $multidev "config"
   if [ $? == 0 ]; then
     hasconfigmanagement=0
-    eval "$3='$hasconfigmanagement'"
-    return;
+    return $hasconfigmanagement
   fi
 
   echo -e "Checking if Configuration Split module is installed."
@@ -43,13 +44,12 @@ drupal8_check_config_management() {
     exit 8
   fi
 
-  eval "$3='$hasconfigmanagement'"
-
   echo -e "Checking if config is overridden on ${multidev}."
-  local isoverridden=0
-  drupal_config_show_overridden $sitename $multidev isoverridden
+  drupal_config_show_overridden $sitename $multidev
+  isoverridden=$?
   if [ "$isoverridden" == 1 ]; then
     drupal_config_export $sitename $multidev 0
   fi
+  return $hasconfigmanagement
 }
 

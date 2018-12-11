@@ -28,15 +28,9 @@ drupal_config_export() {
   local checkforoverrides=$3
   local continue
 
-  echo -e "Clearing caches."
-  terminus -q drush ${sitename}.${multidev} -- cache-clear all
-  echo -e "Updating entities."
-  terminus -q drush ${sitename}.${env_dest} -- entity-updates -y
-  if [ $? != 0 ]; then
-    error_no_cleanup "Error running drush entity-updates." 15
-  fi
-
-  if [ "$checkforoverrides" == 1]; then
+  if [ "$checkforoverrides" == 1 ]; then
+    echo -e "Clearing caches."
+    terminus -q drush ${sitename}.${multidev} -- cache-clear all
     echo -e "Checking if config needs to be exported."
     local isoverridden=0
     drupal_config_show_overridden $sitename $multidev isoverridden
@@ -47,6 +41,12 @@ drupal_config_export() {
     case $export in
       [Nn]) ;;
       *)
+        echo -e "Updating entities."
+        terminus -q drush ${sitename}.${multidev} -- entity-updates -y
+        if [ $? != 0 ]; then
+          error_no_cleanup "Error running drush entity-updates." 15
+        fi
+
         connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
         echo -e "Exporting config:"
         terminus -q drush ${sitename}.${multidev} -- config-export -y
