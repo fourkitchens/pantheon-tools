@@ -32,10 +32,10 @@ for site in $sites; do
   get_framework "$site" FRAMEWORK
   case $FRAMEWORK in
     drupal|drupal8)
-      status=`terminus drush ${site}.live -- pm-info --fields=extension,version --format=csv $MODULE 2>/dev/null | fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added the' | fgrep -v 'Permission denied'`
+      status=`terminus drush ${site}.live -- pm-info --fields=extension,status,version --format=csv $MODULE 2>/dev/null | fgrep 'enabled' |  fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added the' | fgrep -v 'Permission denied'`
       trydev=`echo $status | grep 'needs a higher bootstrap level\|command terminated abnormally'`
       if [ "$trydev" ]; then
-        status=`terminus drush ${site}.dev -- pm-info --fields=extension,version --format=csv $MODULE 2>/dev/null | fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added' | fgrep -v 'Permission denied'`
+        status=`terminus drush ${site}.dev -- pm-info --fields=extension,status,version --format=csv $MODULE 2>/dev/null | fgrep 'enabled' | fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added' | fgrep -v 'Permission denied'`
       fi
       if [ "$status" == "" ] && [ $VERBOSITY == 'y' ]; then
         echo "$site : not found"
