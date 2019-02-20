@@ -5,9 +5,11 @@ if [ -z ${FUNCTIONS_DIR+x} ]; then
   FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
   if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
 fi
-. "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/pantheon-connection-mode"
+. "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
+. "$FUNCTIONS_DIR/drupal/drupal-regenerate-features"
 
 ###
 # Determine Drush version.
@@ -36,12 +38,22 @@ drupal_check_features() {
   if [ "$overridden" != "" ]; then
     # @todo Instead ask to import the overrides.
     echo -e "$overridden"
-    echo -e "There are features overrides.  These should be probably be cleaned up first.  You can do that on this branch.  Once cleaned up you can re-run this script to continue."
-    read -p "${UNDERLINE}[${BOLD}y${NOBOLD}]es I want to quit and clean up manually. [n]o, I want to continue anyway. [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
-    case $continue in
-      [Nn]) ;;
-      *)  exit 0 ;;
-    esac
+    echo -e "There are features overrides.  These should be probably be cleaned up first."
+    read -p "${UNDERLINE}[exit] and clean up manually. [${BOLD}auto${NOBOLD}] clean-up automatically (save all overrides to code). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
+    if [ "$continue" == "" ]; then
+      continue="auto"
+    fi
+    if [ "$continue" == "exit" ]; then
+      echo -e "You can clean up the features on this branch.  Then you can re-run this script to continue."
+      exit 0
+    elif [ "$continue" == "auto" ]; then
+      # In a perfect world we should only switch if it's not already set to SFTP
+      # And only change back if necessary.  But there's no Terminus command to
+      # do that.
+      connection_mode "$sitename" "$multidev" 'sftp'
+      drupal_regenerate_features $sitename $multidev
+      connection_mode "$sitename" "$multidev" 'git'
+    fi
   fi
   return $hasfeatures;
 }

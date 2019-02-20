@@ -5,8 +5,9 @@ if [ -z ${FUNCTIONS_DIR+x} ]; then
   FUNCTIONS_DIR="${BASH_SOURCE%/*}/.."
   if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD/.."; fi
 fi
-. "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-cleanup-on-error"
+. "$FUNCTIONS_DIR/pantheon-commit"
+. "$FUNCTIONS_DIR/pantheon-script-colours"
 
 ##
 # Check if features need to be regenerated.
@@ -31,6 +32,6 @@ drupal_regenerate_features() {
     if [ $? != 0 ]; then
       cleanup_on_error $sitename $multidev "Error regenerating features." 12
     fi
-    multidev_commit "Regenerated features."
+    commit $sitename $multidev "Updated all features."
   fi
 }
