@@ -39,9 +39,12 @@ drupal_check_features() {
     # @todo Instead ask to import the overrides.
     echo -e "$overridden"
     echo -e "There are features overrides.  These should be probably be cleaned up first."
-    read -p "${UNDERLINE}[exit] and clean up manually. [${BOLD}auto${NOBOLD}] clean-up automatically (save all overrides to code). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
+    read -p "${UNDERLINE}[exit] and clean up manually. [auto] clean-up automatically (save all overrides to code). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
+    # We can't assume that an auto cleanup should be default.  If we come across
+    # overrides on dev it might be because the DB hasn't been refreshed in a
+    # while.
     if [ "$continue" == "" ]; then
-      continue="auto"
+      continue="exit"
     fi
     if [ "$continue" == "exit" ]; then
       echo -e "You can clean up the features on this branch.  Then you can re-run this script to continue."
