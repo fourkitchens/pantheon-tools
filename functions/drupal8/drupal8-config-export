@@ -49,7 +49,7 @@ drupal_config_export() {
 
         connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
         echo -e "Exporting config:"
-        terminus -q drush ${sitename}.${multidev} -- config-export -y
+        terminus drush ${sitename}.${multidev} -- config-export -y
         if [ $? != 0 ]; then
           cleanup_on_error $sitename $multidev "Error exporting configuration." 12
         fi
