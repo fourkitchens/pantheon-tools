@@ -42,6 +42,10 @@ env_merge() {
     echo -e "Merging ${sitename}: ${env_source} to ${env_dest}."
     terminus multidev:merge-to-dev ${sitename}.${env_source}
   else
+
+    echo -e "Typically include the ticket title and URL in the deploy message."
+    read -p "${UNDERLINE}Deployment message:${NOUNDERLINE} " deploymessage;
+
     if [ "$env_dest" == 'live' ]; then
       read -p "${UNDERLINE}First backup the live database?:[${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " backup;
       case $backup in
@@ -51,26 +55,18 @@ env_merge() {
           terminus backup:create ${sitename}.${env_dest} --element=database
           ;;
       esac
-    fi
-
-    synccontent=''
-    if [ "$env_dest" == 'test' ]; then
-      read -p "${UNDERLINE}First copy the database and files from live to test?:[${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " sync;
+    elif [ "$env_dest" == 'test' ]; then
+      read -p "${UNDERLINE}First copy the database and files from live to ${env_dest}?:[${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " sync;
       case $sync in
         [Nn]) ;;
         *)
-          # @todo Instead of adding this flag, just do it manually.  Then we can tell if the deploy is taking
-          #       a long time due to the sync, or because something strange is going on.
-          synccontent='--sync-content'
+          terminus env:clone-content ${sitename}.live ${env_dest} -y --cc
           ;;
       esac
     fi
 
-    echo -e "Typically include the ticket title and URL in the deploy message."
-    read -p "${UNDERLINE}Deployment message:${NOUNDERLINE} " deploymessage;
-
     echo -e "Deploying ${sitename}: ${env_source} to ${env_dest}."
-    terminus env:deploy ${sitename}.${env_dest} $synccontent --note "$deploymessage"
+    terminus env:deploy ${sitename}.${env_dest} --note "$deploymessage"
   fi
 
   if [ $? != 0 ]; then
