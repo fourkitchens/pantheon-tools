@@ -24,7 +24,7 @@ drupal_regenerate_features() {
   echo -e "Clearing caches."
   terminus -q drush ${sitename}.${multidev} -- cache-clear all
   echo -e "Checking if features need to be regenerated."
-  overridden=`terminus drush ${sitename}.${multidev} features-list 2>/dev/null | fgrep Overridden`
+  overridden=`terminus drush ${sitename}.${multidev} -- features-list --fields=feature,state 2>/dev/null | fgrep Overridden`
   if [ "$overridden" != "" ]; then
     echo -e "Regenerating these features:"
     echo -e "$overridden"
