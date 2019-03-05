@@ -23,6 +23,8 @@ cleanup_on_error() {
   >&2 echo -e "${INVERSE}ERROR:"
   >&2 echo -e "$3${NOINVERSE}"
   >&2 echo -e ""
-  multidev_delete $1 $2
+  if [ "$2" != "dev" ] && [ "$2" != "test" ] && [ "$2" != "live' ]; then
+    multidev_delete $1 $2
+  fi
   exit "$4";
 }
