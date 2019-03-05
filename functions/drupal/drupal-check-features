@@ -42,7 +42,7 @@ drupal_check_features() {
     if [ "$multidev" == 'test' ]; then
       read -p "${UNDERLINE}[exit] and clean up manually. [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
     else
-      read -p "${UNDERLINE}[exit] and clean up manually. [auto] clean-up automatically (save all overrides to code). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
+      read -p "${UNDERLINE}[exit] and clean up manually. [auto] clean-up automatically (save all overrides to code, warning: only do this if this environment has a fresh copy of the database). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
     fi
     # We can't assume that an auto cleanup should be default.  If we come across
     # overrides on dev it might be because the DB hasn't been refreshed in a
