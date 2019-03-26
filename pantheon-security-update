@@ -130,6 +130,8 @@ function multidev_upstream_update() {
       [Nn]) return 0 ;;
       *) ;;
     esac
+    # We will be in SFTP mode due to the features/config check that already ran.
+    connection_mode "$sitename" "$multidev" 'git'
     echo -e "Updating."
     terminus upstream:updates:apply ${sitename}.${multidev}
     if [ $? != 0 ]; then
