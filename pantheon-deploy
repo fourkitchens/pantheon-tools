@@ -66,5 +66,9 @@ esac
 
 env_merge $SITENAME $FRAMEWORK $SOURCEENV $TARGETENV
 
+URL=''
+get_multidev_url "$SITENAME" "$TARGETENV" URL
+echo -e "$URL"
+
 echo -e "Thanks.  All done."
 
