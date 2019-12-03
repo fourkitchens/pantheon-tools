@@ -41,12 +41,6 @@ drupal_config_export() {
     case $export in
       [Nn]) ;;
       *)
-        echo -e "Updating entities."
-        terminus -q drush ${sitename}.${multidev} -- entity-updates -y
-        if [ $? != 0 ]; then
-          error_no_cleanup "Error running drush entity-updates." 15
-        fi
-
         connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
         echo -e "Exporting config:"
         terminus drush ${sitename}.${multidev} -- config-export -y

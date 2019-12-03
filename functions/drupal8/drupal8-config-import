@@ -37,9 +37,4 @@ drupal_config_import() {
   if [ $? != 0 ]; then
     error_no_cleanup "Error Importing configuration." 15
   fi
-  echo -e "Updating entities."
-  terminus -q drush ${sitename}.${env_dest} -- entity-updates -y
-  if [ $? != 0 ]; then
-    error_no_cleanup "Error running drush entity-updates." 15
-  fi
 }
