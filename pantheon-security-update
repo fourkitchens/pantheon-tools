@@ -91,6 +91,12 @@ multidev_update() {
   esac
 
   echo -e ""
+  echo -e "  $url"
+  echo -e "Please confirm that you can: "
+  echo -e "* Log into the website"
+  echo -e "* View the site status report"
+  echo -e "* View the recent log entries"
+  echo -e ""
   echo -e "${UNDERLINE}Do you wish to merge this multidev into the dev environment?${NOUNDERLINE}"
   echo -e "Some common cases where you shouldn't:"
   echo -e "* If this was a wide-reaching change, and you are not familiar enough with the site to know if things are broken or not.  If so, then get the client to review."
@@ -135,7 +141,7 @@ function multidev_upstream_update() {
     echo -e "Updating."
     terminus upstream:updates:apply ${sitename}.${multidev}
     if [ $? != 0 ]; then
-      echo -e "There was a problem applying the updates. Should we try to automatically resolve merge conflicts, or do you want to take care of this on your own?"
+      echo -e "There was a problem applying the updates. Should we try to automatically resolve merge conflicts, or do you want to take care of this on your own? It should be safe if there are no core patches (check /sites/all/hacks/core, and /hacks/core and composer.json) "
       read -p "${UNDERLINE}Apply the updates and automatically resolve conflicts?  [${BOLD}y${NOBOLD}/n]${NOUNDERLINE} " continue;
       case $continue in
         [Nn])
