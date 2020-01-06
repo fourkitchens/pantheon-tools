@@ -41,14 +41,14 @@ drupal_config_export() {
     case $export in
       [Nn]) ;;
       *)
-        connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
+        connection_mode "$sitename" "$multidev" 'sftp'
         echo -e "Exporting config:"
         terminus drush ${sitename}.${multidev} -- config-export -y
         if [ $? != 0 ]; then
           cleanup_on_error $sitename $multidev "Error exporting configuration." 12
         fi
         commit $sitename $multidev "Regenerated configuration."
-        connection_mode "$SITENAME" "$MULTIDEV" 'git'
+        connection_mode "$sitename" "$multidev" 'git'
         ;;
     esac
   fi
