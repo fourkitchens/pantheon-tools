@@ -6,6 +6,7 @@ if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-error-no-cleanup"
 . "$FUNCTIONS_DIR/pantheon-env-merge"
+. "$FUNCTIONS_DIR/speak-message"
 
 ##
 # Merge a multi-dev to dev.
@@ -27,4 +28,7 @@ multidev_merge() {
 
   # Then merge the multidev into dev.
   env_merge $sitename $framework $multidev 'dev'
+
+  # This typically takes a long time.  Let them know.
+  speak_message "Merge Complete."
 }

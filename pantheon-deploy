@@ -12,6 +12,7 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-env-merge"
 . "$DIR/functions/drupal/drupal-check-features"
 . "$DIR/functions/drupal8/drupal8-check-config-management"
+. "$DIR/functions/speak-message"
 
 #set -x
 
@@ -72,3 +73,5 @@ echo -e "$URL"
 
 echo -e "Thanks.  All done."
 
+# This typically takes a long time.  Let them know.
+speak_message "Deploy Complete."
