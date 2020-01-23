@@ -12,7 +12,7 @@ fi
 . "$FUNCTIONS_DIR/drupal/drupal-regenerate-features"
 
 ###
-# Determine Drush version.
+# Check if Features module is enabled.
 #
 # @param string $SITENAME
 #   The machine name of the site.
