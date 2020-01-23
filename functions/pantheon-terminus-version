@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Include all of the subscripts that we need.
+SUB_SCRIPTS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$SUB_SCRIPTS_DIR" ]]; then DIR="$PWD"; fi
+. "$SUB_SCRIPTS_DIR/pantheon-script-colours"
+
+##
+# Checks Terminus version
+#
+# @param string requiredmajorversion
+#   version string
+#
+# @param string requiredminorversion
+#   version string
+#
+# @return int
+#   1 if terminus is greater than or equal to the required version, else 0.
+##
+terminus_version() {
+  local requiredmajorversion=$1
+  local requiredminorversion=$2
+  local version=`terminus self:info --fields=terminus_version --format=list`
+  local versionmajor=${version%%.*}
+  local versionrest=${version#*.}
+  local versionminor=${versionrest%%.*}
+  if [[ $versionmajor -lt requiredmajorversion ]] || [[ $versionminor -lt requiredminorversion ]]; then
+    return 0
+  fi
+  return 1
+}
+

@@ -7,6 +7,8 @@ if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
 . "$FUNCTIONS_DIR/pantheon-get-multidev-url"
 . "$FUNCTIONS_DIR/speak-message"
+. "$FUNCTIONS_DIR/pantheon-terminus-version"
+
 
 ###
 # Create a multi-dev.
@@ -56,7 +58,14 @@ multidev_create() {
     terminus -q env:wake ${sitename}.${from_env}
     echo -e "${PROTIP}The git branch is created early.  If you need to use this locally, you can probably already do so."
     echo -e "Creating multidev ${multidev} from ${from_env}.  Please wait (this can take a long time)..."
-    terminus -q multidev:create ${sitename}.${from_env} ${multidev}
+    terminus_version 2 4
+    canskipfiles=$?
+    if [ "$canskipfiles" == 1 ]; then
+      echo -e "Files will not be duplicated for increased performance.  ${PROTIP}We assume that you have Stage File Proxy setup for non-live environments."
+      terminus -q --no-files multidev:create ${sitename}.${from_env} ${multidev}
+    else
+      terminus -q multidev:create ${sitename}.${from_env} ${multidev}
+    fi
     if [ $? != 0 ]; then
       >&2 echo -e "Error: Could not create multidev. Maybe the site is already at its max of 10 multidevs.  Check the Pantheon dashboard."
       exit 5;
