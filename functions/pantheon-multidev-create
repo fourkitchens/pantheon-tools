@@ -62,9 +62,9 @@ multidev_create() {
     canskipfiles=$?
     if [ "$canskipfiles" == 1 ]; then
       echo -e "Files will not be duplicated for increased performance.  ${PROTIP}We assume that you have Stage File Proxy setup for non-live environments."
-      terminus -q --no-files multidev:create ${sitename}.${from_env} ${multidev}
+      terminus --no-files multidev:create ${sitename}.${from_env} ${multidev}
     else
-      terminus -q multidev:create ${sitename}.${from_env} ${multidev}
+      terminus multidev:create ${sitename}.${from_env} ${multidev}
     fi
     if [ $? != 0 ]; then
       >&2 echo -e "Error: Could not create multidev. Maybe the site is already at its max of 10 multidevs.  Check the Pantheon dashboard."
