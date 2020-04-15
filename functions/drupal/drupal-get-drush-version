@@ -13,29 +13,46 @@ fi
 #
 # @param string $SITENAME
 #   The machine name of the site.
+# @param string $FRAMEWORK
+#   The framework of the site.
 # @param string $MULTIDEV
 #   The machine name of the multidev.
-# @param $DRUSH_VERSION
+# @param $DRUSH_MAJOR_VERSION
 #   Will be overwritten with the major version of drush.
+# @param $DRUSH_MINOR_VERSION
+#   Will be overwritten with the minor version of drush.
+# @param $DRUSH_POINT_VERSION
+#   Will be overwritten with the point version of drush.
 ###
 drupal_get_drush_version() {
   local sitename=$1
   local framework=$2
   local multidev=$3
 
-  echo -e "Determining the drush version."
-  echo -e "${UNDERLINE}You may be asked if you wish to continue connecting.  Say yes.${NOUNDERLINE}"
-  local drushversion=`terminus drush ${sitename}.${multidev} -- --version --pipe 2>/dev/null | grep --only-matching --color=never --extended "[0-9]+\.[0-9]+\.[0-9]+"` | cut -c1
-  if [ "$drushversion" == "" ]; then
-    echo "Cannot determine the version of Drush.  We'll just assume that everything is okay, and keep going."
-  else
-    if [ $framework == 'drupal' ] && [ "$drushversion" -lt 7 ]; then
-      cleanup_on_error $1 $2 "The site needs to run Drush 7 for Drupal 7.  See https://pantheon.io/docs/drush-versions/" 12
-    fi
-    if [ $framework == 'drupal8' ] && [ "$drushversion" -lt 8 ]; then
-      cleanup_on_error $1 $2 "The site needs to run Drush 8 or higher for Drupal 8.  See https://pantheon.io/docs/drush-versions/" 12
-    fi
-    eval "$4='$drushversion'"
+  local version=`terminus drush ${sitename}.${multidev} -- --version --pipe  2>/dev/null`
+
+  if [ "$version" == "" ]; then
+    echo "Cannot determine the version of Drush.  Proceeding assuming that everything is going to work out fine."
+    eval "$4='0'"
+    return;
   fi
+
+  version=`echo $version | grep -o '[0-9]*\.[0-9]*\.[0-9]*'`
+
+  local versionmajor=${version%%.*}
+  local versionrest=${version#*.}
+  local versionminor=${versionrest%%.*}
+  local versionpoint=${versionrest#*.}
+
+  if [ "$framework" == 'drupal' ] && [ "$versionmajor" -lt 7 ]; then
+    cleanup_on_error $1 $2 "The site needs to run Drush 7 for Drupal 7.  See https://pantheon.io/docs/drush-versions/" 12
+  fi
+  if [ "$framework" == 'drupal8' ] && [ "$versionmajor" -lt 8 ]; then
+    cleanup_on_error $1 $2 "The site needs to run Drush 8 or higher for Drupal 8.  See https://pantheon.io/docs/drush-versions/" 12
+  fi
+
+  eval "$4='$versionmajor'"
+  eval "$5='$versionminor'"
+  eval "$6='$versionpoint'"
 }
 

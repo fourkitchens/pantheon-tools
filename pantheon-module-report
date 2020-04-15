@@ -5,13 +5,14 @@
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-script-colours"
-. "$DIR/functions/pantheon-get-framework"
+. "$DIR/functions/pantheon-get-FRAMEWORK"
+. "$DIR/functions/drupal/drupal-get-drush-version"
 
 #set -x
 
 MODULE=$1
 if [ "$MODULE" == "" ]; then
-  read -p "${UNDERLINE}What module do you want a report about? Enter its machine name.  e.g. print:${NOUNDERLINE} " MODULE
+  read -p "${UNDERLINE}What module do you want a report about? Enter its machine name.  e.g. print  To test Drupal Core, type system:${NOUNDERLINE} " MODULE
 fi
 
 VERBOSITY=$2
@@ -25,23 +26,49 @@ if [ "$VERBOSITY" == "" ]; then
   esac
 fi
 
-sites=`terminus site:list --format=list --field=name | sort`
+sites=$(terminus site:list --format=list --field=name --filter="frozen!=1" | sort)
+#sites=('bric')
 
 for site in $sites; do
   FRAMEWORK=''
   get_framework "$site" FRAMEWORK
   case $FRAMEWORK in
     drupal|drupal8)
-      status=`terminus drush ${site}.live -- pm-info --fields=extension,status,version --format=csv $MODULE 2>/dev/null | fgrep 'enabled' |  fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added the' | fgrep -v 'Permission denied'`
-      trydev=`echo $status | grep 'needs a higher bootstrap level\|command terminated abnormally'`
-      if [ "$trydev" ]; then
-        status=`terminus drush ${site}.dev -- pm-info --fields=extension,status,version --format=csv $MODULE 2>/dev/null | fgrep 'enabled' | fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added' | fgrep -v 'Permission denied'`
-      fi
-      if [ "$status" == "" ] && [ $VERBOSITY == 'y' ]; then
-        echo "$site : not found"
-      elif [ "$status" ]; then
-        echo "$site : $status"
-      fi
+
+      # Sometimes the live environment doesn't exist yet, or there are errrors in settings.php that prevent CLI commands.
+      for environment in 'live' 'dev'; do
+
+        drushmajorversion=''
+        drushminorversion=''
+        drushpointversion=''
+        drupal_get_drush_version "$site" $FRAMEWORK "$environment" drushmajorversion drushminorversion drushpointversion
+        # echo "drush $drushmajorversion.$drushminorversion.$drushpointversion"
+
+        # Unfortunately, there are different commands depending on what version of Drush.
+        if [ "$drushmajorversion" -ge 9 ]; then
+          drushoutput=$(terminus drush ${site}.${environment} -- pm-list --fields=name,status,version --format=string --filter="name=$MODULE" 2>&1 |  fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added the' | fgrep -v 'Permission denied')
+        else
+
+          drushoutput=$(terminus drush ${site}.${environment} -- pm-info --fields=extension,modulestatus,status,version --format=csv "$MODULE" 2>&1 |  fgrep -v 'not found' | fgrep -v 'Could not resolve hostname' | fgrep -v 'Permanently added the' | fgrep -v 'Permission denied')
+        fi
+
+        modulestatus=$(echo "$drushoutput" | fgrep -i 'enabled')
+        trynext=$(echo "$drushoutput" | grep 'needs a higher bootstrap level\|command terminated abnormally')
+        if [ -n "$trynext" ]; then
+          if [ "$environment" == 'dev' ]; then
+            echo "$site: Could not run drush commands against the live or dev environments."
+            break
+          fi
+        else
+          if [ "$modulestatus" == "" ] && [ $VERBOSITY == 'y' ]; then
+            echo "$site.$environment : not found or not enabled"
+          elif [ "$modulestatus" ]; then
+            echo "$site.$environment : $modulestatus"
+          fi
+          # Don't check the next environment, we have a valid result.
+          break
+        fi
+      done
       ;;
     *)
       if [ $VERBOSITY == 'y' ]; then
