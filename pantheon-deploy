@@ -26,6 +26,8 @@ choose_site "$SUGGESTEDSITENAME" SITENAME
 FRAMEWORK=''
 get_framework "$SITENAME" FRAMEWORK
 
+echo -e "${PROTIP} If you know that your deploy is code-only (no config, or DB updates), and doesn't require a DB backup, then you can use \`pantheon-quick-deploy\`."
+
 TARGETENV=$2
 if [ "$TARGETENV" == "" ]; then
   terminus multidev:list $SITENAME  | grep " dev \| test \| live \| ID \|--"
