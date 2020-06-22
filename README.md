@@ -29,6 +29,8 @@ git pull
 pantheon-security-update
 ```
 
+The script will ask you questions along the way (and give you hints when there's ways to add arguments to make things faster).
+
 ## Scripts
 
 ### pantheon-security-update
