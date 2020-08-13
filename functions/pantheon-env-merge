@@ -84,16 +84,8 @@ env_merge() {
 
   echo -e "Clearing caches."
   terminus -q env:clear-cache ${sitename}.${env_dest}
-  if [ "$env_dest" == "test" ] || [ "$env_dest" == "dev" ]; then
-    echo -e "${PROTIP}Make note of whether any database updates happen.  If so you'll want to backup the production database when deploying."
-  fi
   case $framework in
     drupal)
-      echo -e "Checking for database updates."
-      terminus drush ${sitename}.${env_dest} -- updatedb -y 2>&1 | fgrep -v 'This environment is in read-only Git mode'  | fgrep -v '[Exit: 0]'
-      if [ $? != 0 ]; then
-        error_no_cleanup "Error running drush updatedb." 14
-      fi
       drupal_check_if_module_installed $sitename $env_dest "features"
       if [ $? == 1 ]; then
         echo -e "Reverting Features."
@@ -102,14 +94,19 @@ env_merge() {
           error_no_cleanup "Error running drush features-revert-all." 15
         fi
       fi
+      echo -e "Checking for database updates."
+      terminus drush ${sitename}.${env_dest} -- updatedb -y 2>&1 | fgrep -v 'This environment is in read-only Git mode'  | fgrep -v '[Exit: 0]'
+      if [ $? != 0 ]; then
+        error_no_cleanup "Error running drush updatedb." 14
+      fi
       ;;
     drupal8)
+      drupal_config_import "$sitename" "$env_dest"
       echo -e "Checking for database updates."
       terminus drush ${sitename}.${env_dest} -- updatedb -y 2>&1 | fgrep -v 'This environment is in read-only Git mode' | fgrep -v '[Exit: 0]'
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
       fi
-      drupal_config_import "$sitename" "$env_dest"
       ;;
     *)
       # @todo WP.
@@ -123,4 +120,7 @@ env_merge() {
       esac
       ;;
   esac
+  if [ "$env_dest" == "test" ] || [ "$env_dest" == "dev" ]; then
+    echo -e "${PROTIP}Make note of whether any database updates happened.  If so you'll want to backup the production database when deploying."
+  fi
 }

@@ -43,8 +43,13 @@ multidev_update() {
 
   case $framework in
     drupal)
-      local drushversion=''
-      drupal_get_drush_version $sitename $framework $multidev drushversion
+      # We don't actually care what version of Drush is running, but this function
+      # will bail if it's a totally incompatible version.
+      local drushmajorversion=''
+      local drushminorversion=''
+      local drushpointversion=''
+      drupal_get_drush_version "$sitename" $framework "$MULTIDEV" drushmajorversion drushminorversion drushpointversion
+
       drupal_check_features $sitename $multidev
       local hasfeatures=$?
       multidev_upstream_update $sitename $framework $multidev
@@ -64,8 +69,13 @@ multidev_update() {
       connection_mode "$SITENAME" "$MULTIDEV" 'git'
       ;;
     drupal8)
-      local drushversion=''
-      drupal_get_drush_version $sitename $framework $multidev drushversion
+      # We don't actually care what version of Drush is running, but this function
+      # will bail if it's a totally incompatible version.
+      local drushmajorversion=''
+      local drushminorversion=''
+      local drushpointversion=''
+      drupal_get_drush_version "$sitename" $framework "$MULTIDEV" drushmajorversion drushminorversion drushpointversion
+
       drupal8_check_config_management $sitename $multidev
       local hasconfigmanagement=$?
       multidev_upstream_update $sitename $framework $multidev

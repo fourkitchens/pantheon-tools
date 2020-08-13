@@ -42,7 +42,6 @@ for site in $sites; do
         drushminorversion=''
         drushpointversion=''
         drupal_get_drush_version "$site" $FRAMEWORK "$environment" drushmajorversion drushminorversion drushpointversion
-        # echo "drush $drushmajorversion.$drushminorversion.$drushpointversion"
 
         # Unfortunately, there are different commands depending on what version of Drush.
         if [ "$drushmajorversion" -ge 9 ]; then

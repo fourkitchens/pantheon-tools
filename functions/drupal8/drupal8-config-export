@@ -27,29 +27,53 @@ drupal_config_export() {
   local multidev=$2
   local checkforoverrides=$3
   local continue
+  local isoverridden=0
+  local shouldexport=0
 
   if [ "$checkforoverrides" == 1 ]; then
     echo -e "Clearing caches."
     terminus -q drush ${sitename}.${multidev} -- cache-clear all
     echo -e "Checking if config needs to be exported."
-    local isoverridden=0
     drupal_config_show_overridden $sitename $multidev isoverridden
   fi
 
   if [ "$isoverridden" == 1 ] || [ "$checkforoverrides" == 0 ]; then
-    read -p "${UNDERLINE}Should these overrides be exported to code before continuing? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}"  export
-    case $export in
-      [Nn]) ;;
-      *)
-        connection_mode "$sitename" "$multidev" 'sftp'
-        echo -e "Exporting config:"
-        terminus drush ${sitename}.${multidev} -- config-export -y
-        if [ $? != 0 ]; then
-          cleanup_on_error $sitename $multidev "Error exporting configuration." 12
-        fi
-        commit $sitename $multidev "Regenerated configuration."
-        connection_mode "$sitename" "$multidev" 'git'
-        ;;
-    esac
+    if [ "$multidev" == "test" ]; then
+      read -p "${UNDERLINE}Cannot export config on the test environment.  Do you want to exit (or continue)? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}"  exit
+      case $exit in
+        [Nn]) ;;
+        *)
+          cleanup_on_error $sitename $multidev "Cannot export configuration on test." 12
+          ;;
+      esac
+    elif [ "$multidev" == "dev" ]; then
+      read -p "${UNDERLINE}Should these overrides be exported to code before continuing (Typically you shouldn't because the dev environment often has an out-of-date databse)? (Y/${BOLD}N${NOBOLD}) ${NOUNDERLINE}" export
+      case $export in
+        [Yy])
+          shouldexport=1
+          ;;
+        *) ;;
+      esac
+    else
+      read -p "${UNDERLINE}Should these overrides be exported to code before continuing? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}" export
+      case $export in
+        [Nn]) ;;
+        *)
+          shouldexport=1
+          ;;
+      esac
+    fi
+
+    if [ "$shouldexport" == 1 ]; then
+      connection_mode "$sitename" "$multidev" 'sftp'
+      echo -e "Exporting config:"
+      terminus drush ${sitename}.${multidev} -- config-export -y
+      if [ $? != 0 ]; then
+        cleanup_on_error $sitename $multidev "Error exporting configuration." 12
+      fi
+      commit $sitename $multidev "Regenerated configuration."
+      connection_mode "$sitename" "$multidev" 'git'
+    fi
+
   fi
 }
