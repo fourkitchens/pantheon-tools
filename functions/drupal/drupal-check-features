@@ -36,13 +36,12 @@ drupal_check_features() {
   echo -e "Checking that features are not overridden on ${multidev}."
   local overridden=`terminus drush ${sitename}.${multidev} -- features-list --status=enabled --fields=feature,state 2>/dev/null | grep 'Needs review\|Overridden'`
   if [ "$overridden" != "" ]; then
-    # @todo Instead ask to import the overrides.
     echo -e "$overridden"
     echo -e "There are features overrides.  These should be probably be cleaned up first."
     if [ "$multidev" == 'test' ]; then
-      read -p "${UNDERLINE}[exit] and clean up manually. [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
+      read -p "${UNDERLINE}[exit] so that you can clean up manually. [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
     else
-      read -p "${UNDERLINE}[exit] and clean up manually. [auto] clean-up automatically (save all overrides to code, warning: only do this if this environment has a fresh copy of the database). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
+      read -p "${UNDERLINE}[exit] so that you can clean up manually. [auto] clean-up automatically (save all overrides to code, warning: only choose this if this environment has a fresh copy of the live database, or if these overrides are your own changes that you know need to get back into code). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
     fi
     # We can't assume that an auto cleanup should be default.  If we come across
     # overrides on dev it might be because the DB hasn't been refreshed in a

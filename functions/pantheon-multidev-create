@@ -54,7 +54,6 @@ multidev_create() {
     from_env_default='live'
     read -p "${UNDERLINE}Use the db/files from which environment? (dev/test/${BOLD}live${NOBOLD}) ${NOUNDERLINE}"  from_env
     from_env="${from_env:-$from_env_default}"
-    # @todo error check that it's a valid choice.
     terminus -q env:wake ${sitename}.${from_env}
     echo -e "${PROTIP}The git branch is created early.  If you need to use this locally, you can probably already do so."
     echo -e "Creating multidev ${multidev} from ${from_env}.  Please wait (this can take a long time)..."
@@ -69,7 +68,6 @@ multidev_create() {
     from_env_default='none'
     read -p "${UNDERLINE}Copy db from which environment? (dev/test/live/${BOLD}none${NOBOLD}/quit)${NOUNDERLINE} " from_env
     from_env="${from_env:-$from_env_default}"
-    # @todo error check that it's a valid choice.
     case $from_env in
       quit) exit 0;;
       none) ;;

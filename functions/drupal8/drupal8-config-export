@@ -39,7 +39,7 @@ drupal_config_export() {
 
   if [ "$isoverridden" == 1 ] || [ "$checkforoverrides" == 0 ]; then
     if [ "$multidev" == "test" ]; then
-      read -p "${UNDERLINE}Cannot export config on the test environment.  Do you want to exit (or continue)? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}"  exit
+      read -p "${UNDERLINE}Cannot export config on the test environment.  Do you want to exit so that you can clean this up manually (or ignore and continue to the next step)? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}"  exit
       case $exit in
         [Nn]) ;;
         *)
@@ -55,6 +55,7 @@ drupal_config_export() {
         *) ;;
       esac
     else
+      # @todo Need some more help text and options here, similar to what we do for Features in D7.
       read -p "${UNDERLINE}Should these overrides be exported to code before continuing? (${BOLD}Y${NOBOLD}/N) ${NOUNDERLINE}" export
       case $export in
         [Nn]) ;;
