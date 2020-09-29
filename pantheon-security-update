@@ -109,7 +109,7 @@ multidev_update() {
   echo -e ""
   echo -e "${UNDERLINE}Do you wish to merge this multidev into the dev environment?${NOUNDERLINE}"
   echo -e "Some common cases where you shouldn't:"
-  echo -e "* You're a contractor who needs to have staff review before a deploy."
+  echo -e "* You're new to the team and would like a more experienced person to check first."
   echo -e "* If this was a wide-reaching change, and you are not familiar enough with the site to know if things are broken or not.  If so, then get the client to review."
   # @todo check for this.
   echo -e "* If there is undeployed code on the dev environment."
