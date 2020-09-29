@@ -47,7 +47,7 @@ fi
 
 #Transfer the Database.
 >&2 echo -e "--Now transfering the database.--"
-mysqldump --no-autocommit --single-transaction --opt --quote-names --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database | $PV
+mysqldump --no-autocommit --single-transaction -B --column-statistics=0 --opt --quote-names --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database | $PV
 
 # Kill the SSH session.
 >&2 echo -e "--Now cleaning up the SSH connection.--"
