@@ -33,8 +33,8 @@ mysql_database=`echo -e "$connection_info" | grep mysql_database | awk '{print $
 terminus env:wake $1.$2
 
 >&2 echo -e "--Now opening the SSH connection.--"
-#echo "ssh -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host"
-ssh -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host
+#echo "ssh -o 'StrictHostKeyChecking accept-new' -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host"
+ssh -o 'StrictHostKeyChecking accept-new' -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host
 
 >&2 echo -e "--Now opening MySQL CLI.--"
 #echo "mysql -u$mysql_username -h127.0.0.1 -P$mysql_port -p$mysql_password $mysql_database"
