@@ -17,9 +17,6 @@ if [ "$EMAIL" == "" ]; then
   read -p "${UNDERLINE}What email address should be offboarded?${NOUNDERLINE} " EMAIL
 fi
 
-echo "Note that to prevent you from poking out your eyes, either this Terminus issue needs to be solved, or you need to apply the patch from there."
-echo "  https://github.com/pantheon-systems/terminus/issues/1873"
-
 echo ""
 echo "$EMAIL will be:"
 echo "* Removed from your Pantheon organization."
@@ -42,20 +39,49 @@ fi
 echo "This will take a really long time..."
 
 sites=`terminus site:list --format=list --field=name | sort`
+## D7
+#sites="aftorg"
+## D8
+#sites="columbia-sps"
+## D9
+#sites="advotools"
+## WP
+#sites="advomatic"
 
 for site in $sites; do
   FRAMEWORK=''
   get_framework "$site" FRAMEWORK
-  case $FRAMEWORK in
-    drupal|drupal8)
-      environments=`terminus env:list $site --format=list --field=id`
-      for environment in $environments; do
-        echo "Blocking from $site.$environment"
+  environments=`terminus env:list $site --format=list --field=id`
+  for environment in $environments; do
+    echo "Blocking from $FRAMEWORK $site.$environment"
+    case $FRAMEWORK in
+      drupal)
         # Need to '-q' to avoid 'Unable to find a matching user' error.
-        terminus -y -q drush ${site}.${environment} -- user-block $EMAIL
-      done
-      ;;
-  esac
+        terminus -y -q drush ${site}.${environment} -- user-block --mail=$EMAIL
+        ;;
+
+      drupal8)
+        # Need to '-q' to avoid muddying the output with
+        # "this site is in git mode" messages.
+        name=`terminus -y -q drush ${site}.${environment} -- user-information --mail=$EMAIL --field=name`
+        if [ "$name" != "" ]; then
+          # Need to '-q' to avoid 'Unable to find a matching user' error.
+          terminus -y -q drush ${site}.${environment} -- user-block $name
+        fi
+       ;;
+
+      wordpress)
+        # WP doesn't have a concept of "blocking" an account, so instead,
+        # reset their password.
+        terminus -y -q wp ${site}.${environment} -- user reset-password $EMAIL --skip-email
+        ;;
+
+      *)
+        echo "Don't know how to handle framework $FRAMEWORK"
+        ;;
+
+    esac
+  done
   echo "Removing from $site"
   terminus -y site:team:remove $site $EMAIL
 done
