@@ -34,6 +34,7 @@ drupal_config_show_overridden() {
     echo -e "  $link"
     exit 1
   else
+    # @todo Do we need this line here? User has already been informed we are checking for overrides when this is called from drupal8-check-config-management
     echo -e "Checking for overridden config on ${env}."
     local overridden=`terminus drush ${sitename}.${env} -- config-import -n --preview=list  2>/dev/null | fgrep -v "There are no changes to import" | fgrep -v 'Import the listed configuration changes?'`
     if [ "$overridden" != "" ]; then

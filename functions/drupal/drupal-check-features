@@ -33,13 +33,13 @@ drupal_check_features() {
     hasfeatures=0
     return $hasfeatures;
   fi
-  echo -e "Checking that features are not overridden on ${multidev}."
+  echo -e "Checking if features are overridden on ${multidev}."
   local overridden=`terminus drush ${sitename}.${multidev} -- features-list --status=enabled --fields=feature,state 2>/dev/null | grep 'Needs review\|Overridden'`
   if [ "$overridden" != "" ]; then
     echo -e "$overridden"
     echo -e "There are features overrides.  These should be probably be cleaned up first."
     if [ "$multidev" == 'test' ]; then
-      read -p "${UNDERLINE}[exit] so that you can clean up manually. [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
+      read -p "${UNDERLINE}Cannot export config on the test environment. [exit] so that you can clean up manually. [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
     else
       read -p "${UNDERLINE}[exit] so that you can clean up manually. [auto] clean-up automatically (save all overrides to code, warning: only choose this if this environment has a fresh copy of the live database, or if these overrides are your own changes that you know need to get back into code). [continue] on to the next step without making changes.${NOUNDERLINE} " continue;
     fi
