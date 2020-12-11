@@ -1,0 +1,79 @@
+#!/bin/bash
+# Bash script to get a summary of the Drupal status reports of all sites.
+
+# Include all of the subscripts that we need.
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-get-FRAMEWORK"
+. "$DIR/functions/drupal/drupal-get-drush-version"
+
+#set -x
+
+SEVERITY=$1
+if [ "$SEVERITY" == "" ]; then
+  echo "Severity levels"
+  echo " 0 - Status & Okay"
+  echo " 1 - Warning"
+  echo " 2 - Error"
+  read -p "${UNDERLINE}What minimum severity level should be reported? (${BOLD}2${NOBOLD}) ${NOUNDERLINE} " SEVERITY
+  case $SEVERITY in
+    [0]) ;;
+    [1]) ;;
+    *)
+      SEVERITY=2
+      ;;
+  esac
+fi
+
+sites=$(terminus site:list --format=list --field=name --filter="frozen!=1" | sort)
+#sites=('bric')
+
+for site in $sites; do
+  FRAMEWORK=''
+  get_framework "$site" FRAMEWORK
+  case $FRAMEWORK in
+    drupal|drupal8)
+
+      echo ""
+      echo "*** $site ***"
+
+      # Sometimes the live environment doesn't exist yet, or there are errrors in settings.php that prevent CLI commands.
+      for environment in 'live' 'dev'; do
+
+        drushmajorversion=''
+        drushminorversion=''
+        drushpointversion=''
+        drupal_get_drush_version "$site" $FRAMEWORK "$environment" drushmajorversion drushminorversion drushpointversion
+
+        # Unfortunately, there are different commands depending on what version of Drush.
+        if [ "$drushmajorversion" -ge 9 ]; then
+          drushoutput=$(terminus drush "${site}".${environment}  -- rq --severity=$SEVERITY --fields=title,value --format=string  2>&1)
+        else
+          drushoutput=$(terminus drush "${site}".${environment} -- rq --severity=$SEVERITY --fields=title,value --no-field-labels 2>&1)
+        fi
+
+        # Filter out the chatter.
+        drushoutput=$(echo "$drushoutput" | grep -v 'Unsupported release' | grep -v "This environment is in read-only Git mode" | grep -v 'Exit: 0' | grep -v 'Up to date' | fgrep -v 'Permanently added the RSA host key for IP address' | fgrep -v 'Not fully protected' )
+
+        trynext=$(echo "$drushoutput" | grep 'needs a higher bootstrap level\|command terminated abnormally')
+        if [ -n "$trynext" ]; then
+          if [ "$environment" == 'dev' ]; then
+            echo "$site: Could not run drush commands against the live or dev environments."
+            break
+          fi
+        else
+          echo "$drushoutput"
+          # Don't check the next environment, we have a valid result.
+          break
+        fi
+      done
+      ;;
+    *)
+      # Not Drupal.
+      ;;
+  esac
+done
+
+echo -e "Thanks.  All done."
+

@@ -76,3 +76,7 @@ Offboard a staff member from your organization.
 ### pantheon-deploy
 
 Deploy dev->test or test->live.
+
+### pantheon-drupal-status-report
+
+Report a summary of the Status Report for every Drupal site.
