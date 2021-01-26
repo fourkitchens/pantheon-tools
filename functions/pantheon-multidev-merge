@@ -29,6 +29,8 @@ multidev_merge() {
   # Then merge the multidev into dev.
   env_merge $sitename $framework $multidev 'dev'
 
+  echo -e "Check the dev environment."
+
   # This typically takes a long time.  Let them know.
   speak_message "Merge Complete."
 }

@@ -123,4 +123,6 @@ env_merge() {
   if [ "$env_dest" == "test" ] || [ "$env_dest" == "dev" ]; then
     echo -e "${PROTIP}Make note of whether any database updates happened.  If so you'll want to backup the production database when deploying."
   fi
+  echo -e "Merge completed for:"
+  echo -e "  http://${env_dest}-${sitename}.pantheonsite.io/"
 }
