@@ -26,6 +26,7 @@ drupal_config_export() {
   local sitename=$1
   local multidev=$2
   local checkforoverrides=$3
+  local continue
   local isoverridden=0
   local shouldexport=0
 
