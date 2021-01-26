@@ -97,7 +97,7 @@ drupal_update_list_modules_needing_update() {
     echo -e "These modules are in the following locations:"
     terminus drush ${sitename}.${multidev} -- pm-info --fields=path --no-field-labels --format=list `echo $modulelist` 2>/dev/null
   else
-    echo -e '*none*'
+    echo -e '*no modules require a security update*'
   fi
 }
 
