@@ -10,7 +10,10 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-choose-site"
 . "$DIR/functions/pantheon-get-framework"
 . "$DIR/functions/pantheon-multidev-create"
+. "$DIR/functions/drupal/drupal-check-features"
+. "$DIR/functions/drupal8/drupal8-check-config-management"
 
+# Uncomment for debugging.
 #set -x
 
 SUGGESTEDSITENAME=$1
@@ -26,6 +29,19 @@ get_framework "$SITENAME" FRAMEWORK
 SUGGESTEDMULTIDEV=$2
 MULTIDEV=''
 multidev_create "$SITENAME" "$FRAMEWORK" "$SUGGESTEDMULTIDEV" MULTIDEV
+
+echo "multidev is: $MULTIDEV"
+
+case $FRAMEWORK in
+  drupal)
+    drupal_check_features "$SITENAME" "$MULTIDEV"
+    ;;
+
+  drupal8)
+    drupal8_check_config_management "$SITENAME" "$MULTIDEV"
+    ;;
+
+esac
 
 echo -e "Thanks.  All done."
 
