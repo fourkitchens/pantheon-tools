@@ -4,12 +4,13 @@
 # Include all of the subscripts that we need.
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
-. "$DIR/functions/pantheon-script-colours"
-. "$DIR/functions/pantheon-terminus-check"
 . "$DIR/functions/pantheon-authenticate"
 . "$DIR/functions/pantheon-choose-site"
 . "$DIR/functions/pantheon-get-framework"
+. "$FUNCTIONS_DIR/pantheon-get-multidev-url"
 . "$DIR/functions/pantheon-multidev-create"
+. "$DIR/functions/pantheon-script-colours"
+. "$DIR/functions/pantheon-terminus-check"
 . "$DIR/functions/drupal/drupal-check-features"
 . "$DIR/functions/drupal8/drupal8-check-config-management"
 
@@ -42,6 +43,11 @@ case $FRAMEWORK in
     ;;
 
 esac
+
+URL=''
+get_multidev_url $SITENAME $MULTIDEV URL
+echo -e "Multidev URL:"
+echo -e "  URL"
 
 echo -e "Thanks.  All done."
 
