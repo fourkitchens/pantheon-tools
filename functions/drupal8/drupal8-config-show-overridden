@@ -37,9 +37,12 @@ drupal_config_show_overridden() {
     # This is similar to the message already given in drupal8-check-config-management, 
     # but we also show something here for easier debugging when things go awry.
     echo -e "Checking for overridden config on ${env}."
+    terminus -q drush ${sitename}.${env} -- cr
     local overridden=`terminus drush ${sitename}.${env} -- config-import -n --no --preview=list  2>/dev/null | fgrep -v "There are no changes to import" | fgrep -v 'Import the listed configuration changes?'`
     if [ "$overridden" != "" ]; then
+      echo -e ""
       echo -e "$overridden"
+      echo -e ""
       isoverridden=1
     else
       isoverridden=0
