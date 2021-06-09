@@ -47,7 +47,7 @@ esac
 URL=''
 get_multidev_url $SITENAME $MULTIDEV URL
 echo -e "Multidev URL:"
-echo -e "  URL"
+echo -e "  $URL"
 
 echo -e "Thanks.  All done."
 
