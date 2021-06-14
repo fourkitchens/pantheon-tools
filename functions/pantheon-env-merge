@@ -4,6 +4,7 @@
 FUNCTIONS_DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 . "$FUNCTIONS_DIR/pantheon-script-colours"
+. "$FUNCTIONS_DIR/pantheon-check-undeployed"
 . "$FUNCTIONS_DIR/pantheon-error-no-cleanup"
 . "$FUNCTIONS_DIR/drupal/drupal-check-if-module-installed"
 . "$FUNCTIONS_DIR/drupal8/drupal8-config-import"
@@ -30,8 +31,12 @@ env_merge() {
 
   terminus -q env:wake ${sitename}.${env_source}
   terminus -q env:wake ${sitename}.${env_dest}
-
-  # @todo Ask to continue if there's undeployed code.  Test using `terminus env:code-log ${sitename}.dev`.
+  
+  
+  #Validate for undeployed code.
+  if [ "$env_dest" == "dev" ] || [ "$env_dest" == "test" ]; then
+    check_deployed ${sitename} ${env_dest}
+  fi
 
   # @todo Test for clean config in the destination.
 
