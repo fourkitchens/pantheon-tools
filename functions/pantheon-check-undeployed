@@ -14,19 +14,10 @@ check_deployed() {
   
   echo -e "Checking for undeployed code in ${sitename}."
   
-  #Check if previous commit was deployed
-  check=$(terminus env:code-log ${sitename}.${dest} --field=labels | sed -n -e '2{p;q}')
+  #Check if previous commit was deployed in "live"
+  check=$(terminus env:code-log ${sitename}.${dest} --field=labels | head -1 | grep "live")
 
-  # Set space as the delimiter
-  IFS=', '
-
-  #Set array to compare
-  Array1=( ${dest} )
-
-  #Read the split words into an array based on space delimiter
-  read -a strarr <<< "$check"
-
-  if [[ ! " ${strarr[@]} " =~ " ${dest} " ]]; then
+  if [ -z "$check" ]; then
     #Get site ID
     id=$(terminus site:info ${sitename} --field=ID)
     echo -e "Aborting due to undeployed code in the ${dest} environment."
