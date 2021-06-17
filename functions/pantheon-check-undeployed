@@ -20,8 +20,16 @@ check_deployed() {
   if [ -z "$check" ]; then
     #Get site ID
     id=$(terminus site:info ${sitename} --field=ID)
-    echo -e "Aborting due to undeployed code in the ${dest} environment."
+    echo -e "There is undeployed code in the ${dest} environment."
     echo -e "https://dashboard.pantheon.io/sites/${id}#${dest}/deploy"
-    exit
+    read -p "${UNDERLINE}Still wish to continue?: [y/${BOLD}n${NOBOLD}]${NOUNDERLINE} " confirm;
+    case $confirm in
+      [Yy])
+        echo -e "Please double check site after deploy"
+       ;;
+      *)
+        exit
+        ;;
+    esac
   fi
 }
