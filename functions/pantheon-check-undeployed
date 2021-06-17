@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Include all of the functions that we need.
+FUNCTIONS_DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
+. "$FUNCTIONS_DIR/pantheon-script-colours"
+
+##
+# Checks that code is deployed.
+##
+check_deployed() {
+  local sitename=$1
+  local dest=$2
+  
+  echo -e "Checking for undeployed code in ${sitename}."
+  
+  #Check if previous commit was deployed in "live"
+  check=$(terminus env:code-log ${sitename}.${dest} --field=labels | head -1 | grep "live")
+
+  if [ -z "$check" ]; then
+    #Get site ID
+    id=$(terminus site:info ${sitename} --field=ID)
+    echo -e "Aborting due to undeployed code in the ${dest} environment."
+    echo -e "https://dashboard.pantheon.io/sites/${id}#${dest}/deploy"
+    exit
+  fi
+}
