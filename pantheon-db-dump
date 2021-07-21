@@ -43,6 +43,7 @@ PV=''
 if command -v pv >/dev/null 2>&1; then
   SIZE_BYTES=$(mysql --skip-column-names  --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database <<< 'SELECT ROUND(SUM(data_length) * 0.8) AS "size_bytes" FROM information_schema.TABLES;')
   PV="pv --progress --timer --rate --size $SIZE_BYTES"
+  >&2 echo -e "Approximate database size: $SIZE_BYTES"
   >&2 echo -e "This progressbar is only an estimate.  If the transfer completes at less than 100% without errors, then it was successful."
 fi
 
@@ -52,6 +53,6 @@ mysqldump --no-autocommit --single-transaction -B --column-statistics=0 --opt --
 
 # Kill the SSH session.
 >&2 echo -e "--Now cleaning up the SSH connection.--"
-ps -fU `whoami` | grep "ssh -f" | grep "@$mysql_host" | awk '{print $2}' | xargs kill
+ps -fU `whoami` | grep "ssh -o" | grep "@$mysql_host" | awk '{print $2}' | xargs kill
 
 >&2 echo -e "All done"

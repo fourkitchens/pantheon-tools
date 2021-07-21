@@ -33,12 +33,12 @@ mysql_database=`echo -e "$connection_info" | grep mysql_database | awk '{print $
 terminus env:wake $1.$2
 
 >&2 echo -e "--Now opening the SSH connection.--"
-#echo "ssh -o 'StrictHostKeyChecking accept-new' -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host"
+echo "ssh -o 'StrictHostKeyChecking accept-new' -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host"
 ssh -o 'StrictHostKeyChecking accept-new' -f -N -L $mysql_port:localhost:$mysql_port -p $git_port $sftp_username@$mysql_host
 
 >&2 echo -e "--Now opening MySQL CLI.--"
-#echo "mysql -u$mysql_username -h127.0.0.1 -P$mysql_port -p$mysql_password $mysql_database"
+echo "mysql --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database"
 mysql --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database
 
 >&2 echo -e "--Now cleaning up the SSH connection.--"
-ps -fU `whoami` | grep "ssh -f" | grep "@$mysql_host" | awk '{print $2}' | xargs kill
+ps -fU `whoami` | grep "ssh -o" | grep "@$mysql_host" | awk '{print $2}' | xargs kill
