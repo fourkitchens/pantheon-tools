@@ -32,7 +32,7 @@ multidev_create() {
   echo -e "Creating multidev for ${framework} site ${sitename}."
 
   while true; do
-    read -p "${UNDERLINE}What should the multidev be called. You may use the name of an existing branch (tickets typically include the ticket number.  Eg. Zendesk: zd1234, or Pivotal Tracker: pt123456789). [${BOLD}${sugested_multidev}${NOBOLD}]? ${NOUNDERLINE}"  multidev
+    read -p "${UNDERLINE}What should the multidev be called? You may use the name of an existing branch. Typically includes the ticket number  e.g. Zendesk: zd1234, or Pivotal Tracker: pt123456789). [${BOLD}${sugested_multidev}${NOBOLD}]? ${NOUNDERLINE}"  multidev
     multidev="${multidev:-$sugested_multidev}"
     # Replace hash characters which are common from Pivotal Tracker IDs.
     multidev="${multidev/\#/}"
