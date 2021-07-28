@@ -1,5 +1,5 @@
 # pantheon-tools
-Tools to run actions against a Pantheon site
+Tools to run actions against a Pantheon site.
 
 ## Pre-requisites
 1. Install [Terminus](https://github.com/pantheon-systems/terminus).
