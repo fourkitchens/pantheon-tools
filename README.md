@@ -1,6 +1,14 @@
 # pantheon-tools
 Tools to run actions against a Pantheon site, including many best practices for development workflow. 
 
+This includes things like:
+* Sort out configuration problems before you move on to the next step.
+* Create a backup before deploying.
+* Merge the main/master branch into a multidev before going the other direction.
+* Pause a deployment if there's undeployed code in the next environment. 
+* General standardization around development process.
+* etc.
+
 ## Pre-requisites
 1. Install [Terminus](https://github.com/pantheon-systems/terminus).
 2. `terminus auth:login` to store an access token.
