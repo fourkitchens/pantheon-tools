@@ -1,0 +1,177 @@
+#!/usr/bin/php
+<?php
+/**
+ * Iterate over all sites and rename usernames/email addresses.
+ */
+
+# Instructions.
+$CSV = $argv[1];
+if (!$CSV) {
+  $CSV = readline("CSV filename (with a header row, and columns for: \"existing username\", \"new username\", \"existing email address\", \"new email address\")?");
+}
+
+# Can we access/read the file?
+if (!file_exists($CSV)) {
+  echo "$CSV does not exist";
+  die(1);
+}
+if (($stream = fopen($CSV, 'rb')) === false) {
+  echo "$CSV is not readable";
+  die(1);
+}
+
+# Skip the header row.
+fgetcsv($stream);
+
+$row = 0;
+$email_conversions = [];
+
+$d7sql = '';
+$d8sql = '';
+$wpsql = '';
+
+while (($account = fgetcsv($stream)) !== FALSE) {
+  $row++;
+  echo "ACCOUNT:" . PHP_EOL;
+  echo " existing username: " . $account[0] . PHP_EOL;
+  echo " new username: " . $account[1] . PHP_EOL;
+  echo " existing email: " . $account[2] . PHP_EOL;
+  echo " new email: " . $account[3] . PHP_EOL;
+
+  $email_conversions[$account[2]] = $account[3];
+
+  $d7sql .= " UPDATE IGNORE users SET mail='" . $account[3] . "' WHERE mail='" . $account[2] . "' LIMIT 1; ";
+  $d7sql .= " UPDATE IGNORE users SET name='" . $account[1] . "' WHERE name='" . $account[0] . "' LIMIT 1; ";
+
+  $d8sql .= " UPDATE IGNORE users_field_data SET mail='" . $account[3] . "' WHERE mail='" . $account[2] . "' LIMIT 1; ";
+  $d8sql .= " UPDATE IGNORE users_field_data SET name='" . $account[1] . "' WHERE name='" . $account[0] . "' LIMIT 1; ";
+
+  $wpsql .= " UPDATE IGNORE wp_users SET user_email='" . $account[3] . "' WHERE user_email='" . $account[2] . "' LIMIT 1; ";
+  $wpsql .= " UPDATE IGNORE wp_users SET user_login='" . $account[1] . "' WHERE user_login='" . $account[0] . "' LIMIT 1; ";
+  $wpsql .= " UPDATE IGNORE wp_users SET user_nicename='" . $account[1] . "' WHERE user_nicename='" . $account[0] . "' LIMIT 1; ";
+
+}
+fclose($stream);
+
+echo PHP_EOL . "$row accounts to convert." . PHP_EOL;
+
+if (empty($argv[2])) {
+  $CONFIRM = readline("Account email address and username, and security notification emails will be converted.  Confirm (y/N)");
+}
+else {
+  $CONFIRM = $argv[2];
+}
+if (!in_array($CONFIRM, ['y', 'Y'])) {
+  echo "abort";
+  exit;
+}
+
+//var_export($d7sql);
+//var_export($d8sql);
+//var_export($wpsql);
+
+echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
+
+# @todo uncomment.
+## D7
+$sites=["aftorg"];
+## D8
+#$sites="columbia-sps"
+## D9
+#$sites="advotools"
+## WP
+#$sites="advomatic"
+#$sites=`terminus site:list --format=list --field=name | sort`
+
+foreach ($sites as $site) {
+  # @todo uncomment
+  $framework = 'drupal';
+//  $framework = trim(shell_exec("terminus site:info --field=framework $site"));
+  # @todo uncomment
+  $environments = ['dev'];
+//  $environments= shell_exec("terminus env:list $site --format=list --field=id");
+  foreach ($environments as $environment) {
+    echo "Converting $framework site: $site.$environment" . PHP_EOL;
+    switch ($framework) {
+      case "drupal":
+        // Accounts.
+        $result = shell_exec("echo \"$d7sql\" | terminus drush ${site}.${environment} -- sql-cli 2>&1");
+        if (strpos($result, 'error') !== FALSE) {
+          echo $result . PHP_EOL;
+          die(1);
+        }
+
+        // @todo Search for other active usernames that start with "advo".
+
+        // Security update notification.
+        // Need to dump stderr because terminus is so chatty and we don't want
+        // to mix its messages with our JSON.  This _will_ hide errors.
+        $security_emails = trim(shell_exec("terminus drush ${site}.${environment} -- variable-get --format=json update_notify_emails 2>/dev/null"));
+        if (!$security_emails) {
+          die('Could not retrieve update_notify_emails');
+        }
+        $converted_email_count = convert_emails($security_emails, $email_conversions);
+        if ($converted_email_count) {
+          $security_emails = json_encode($security_emails);
+          $result = shell_exec("terminus drush ${site}.${environment} -- variable-set --format=json update_notify_emails '$security_emails' 2>&1");
+          if (strpos($result, 'error') !== FALSE) {
+            echo $result . PHP_EOL;
+            die(1);
+          }
+        }
+        else {
+          echo "notice: no security update emails to convert." . PHP_EOL;
+        }
+
+        break;
+
+      case "drupal8":
+        break;
+
+      case "wordpress":
+        break;
+
+      default:
+        echo "Don't know how to handle framework $framework";
+        die(1);
+        break;
+
+    }
+  }
+}
+
+echo "Thanks.  All done.";
+
+/**
+ * Convert a list of email addresses.
+ *
+ * @param &$emails_to_convert
+ *  Either a simple array of email addresses,
+ *  or a string that can be json-decoded as such.
+ *  Conversions happen in-place.  Will always be an array in the end.
+ * @param array $email_conversions
+ *  The conversions that we want to happen in the format
+ *  old => new
+ *
+ * @return int
+ *  The number of conversions.
+ */
+function convert_emails(&$emails_to_convert, array $email_conversions): int {
+    if (is_string($emails_to_convert)) {
+        $array_emails_to_convert = json_decode($emails_to_convert, TRUE);
+        if (!$emails_to_convert) {
+            echo "Cannot decode JSON " . $emails_to_convert;
+            die(1);
+        }
+      $emails_to_convert = $array_emails_to_convert['update_notify_emails'] ?? $array_emails_to_convert;
+    }
+
+    $conversion_count = 0;
+    foreach ($emails_to_convert as &$email_to_convert) {
+        if (isset($email_conversions[$email_to_convert])) {
+            $email_to_convert = $email_conversions[$email_to_convert];
+            $conversion_count ++;
+        }
+    }
+    return $conversion_count;
+}
