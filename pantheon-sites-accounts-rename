@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<?php
+/** @noinspection NotOptimalIfConditionsInspection */<?php
 /**
  * Iterate over all sites and rename usernames/email addresses.
  */
@@ -23,6 +23,7 @@ if (($stream = fopen($CSV, 'rb')) === false) {
 # Skip the header row.
 fgetcsv($stream);
 
+# Confirmations.
 $row = 0;
 $email_conversions = [];
 
@@ -40,6 +41,7 @@ while (($account = fgetcsv($stream)) !== FALSE) {
 
   $email_conversions[$account[2]] = $account[3];
 
+  // Build SQL (there's no drush commands for this stuff).
   $d7sql .= " UPDATE IGNORE users SET mail='" . $account[3] . "' WHERE mail='" . $account[2] . "' LIMIT 1; ";
   $d7sql .= " UPDATE IGNORE users SET name='" . $account[1] . "' WHERE name='" . $account[0] . "' LIMIT 1; ";
 
@@ -74,18 +76,18 @@ echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
 
 # @todo uncomment.
 ## D7
-$sites=["aftorg"];
+//$sites=["aftorg"];
 ## D8
-#$sites="columbia-sps"
+$sites=["columbia-sps"];
 ## D9
-#$sites="advotools"
+//$sites="advotools"
 ## WP
-#$sites="advomatic"
-#$sites=`terminus site:list --format=list --field=name | sort`
+//$sites="advomatic"
+//$sites=`terminus site:list --format=list --field=name | sort`
 
 foreach ($sites as $site) {
   # @todo uncomment
-  $framework = 'drupal';
+  $framework = 'drupal8';
 //  $framework = trim(shell_exec("terminus site:info --field=framework $site"));
   # @todo uncomment
   $environments = ['dev'];
@@ -101,7 +103,7 @@ foreach ($sites as $site) {
           die(1);
         }
 
-        // @todo Search for other active usernames that start with "advo".
+        // @todo Search for other unblocked usernames that start with "advo".
 
         // Security update notification.
         // Need to dump stderr because terminus is so chatty and we don't want
@@ -126,6 +128,39 @@ foreach ($sites as $site) {
         break;
 
       case "drupal8":
+        // Accounts.
+        $result = shell_exec("echo \"$d8sql\" | terminus drush $site.$environment -- sql-cli 2>&1");
+        if (strpos($result, 'error') !== FALSE) {
+          echo $result . PHP_EOL;
+          die(1);
+        }
+
+        // @todo Search for other unblocked usernames that start with "advo".
+
+        // Security update notification.
+        if ($environment === 'dev') {
+          // Need to dump stderr because terminus is so chatty and we don't want
+          // to mix its messages with our JSON.  This _will_ hide errors.
+          $security_emails = trim(shell_exec("terminus drush $site.$environment -- config-get --format=json update.settings notification.emails 2>/dev/null"));
+          if (!$security_emails) {
+            die('Could not retrieve update_notify_emails');
+          }
+          $converted_email_count = convert_emails($security_emails, $email_conversions);
+          if ($converted_email_count) {
+            $security_emails = json_encode($security_emails);
+            // @todo pick this up from here.
+            $result = shell_exec("terminus drush $site.$environment -- config-set --input-format=json update.settings notification.emails '$security_emails' 2>&1");
+            if (strpos($result, 'error') !== FALSE) {
+              echo $result . PHP_EOL;
+              die(1);
+            }
+            // @todo quick deploy.
+          }
+          else {
+            echo "notice: no security update emails to convert." . PHP_EOL;
+          }
+        }
+
         break;
 
       case "wordpress":
@@ -134,7 +169,6 @@ foreach ($sites as $site) {
       default:
         echo "Don't know how to handle framework $framework";
         die(1);
-        break;
 
     }
   }
@@ -145,7 +179,7 @@ echo "Thanks.  All done.";
 /**
  * Convert a list of email addresses.
  *
- * @param &$emails_to_convert
+ * @param string|array &$emails_to_convert: array
  *  Either a simple array of email addresses,
  *  or a string that can be json-decoded as such.
  *  Conversions happen in-place.  Will always be an array in the end.
@@ -158,12 +192,13 @@ echo "Thanks.  All done.";
  */
 function convert_emails(&$emails_to_convert, array $email_conversions): int {
     if (is_string($emails_to_convert)) {
+        var_export($emails_to_convert);
         $array_emails_to_convert = json_decode($emails_to_convert, TRUE);
         if (!$emails_to_convert) {
             echo "Cannot decode JSON " . $emails_to_convert;
             die(1);
         }
-      $emails_to_convert = $array_emails_to_convert['update_notify_emails'] ?? $array_emails_to_convert;
+        $emails_to_convert = $array_emails_to_convert['update_notify_emails'] ?? $array_emails_to_convert['update.settings:notification.emails'] ?? $array_emails_to_convert;
     }
 
     $conversion_count = 0;
