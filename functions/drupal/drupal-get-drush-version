@@ -45,10 +45,12 @@ drupal_get_drush_version() {
   local versionpoint=${versionrest#*.}
 
   if [ "$framework" == 'drupal' ] && [ "$versionmajor" -lt 7 ]; then
-    cleanup_on_error $1 $2 "The site needs to run Drush 7 for Drupal 7.  See https://pantheon.io/docs/drush-versions/" 12
+    >&2 echo -e "${INVERSE}ERROR:"
+    >&2 echo -e "The site ${sitename}.${multidev} needs to run Drush 7 for Drupal 7.  See https://pantheon.io/docs/drush-versions/${NOINVERSE}"
   fi
   if [ "$framework" == 'drupal8' ] && [ "$versionmajor" -lt 8 ]; then
-    cleanup_on_error $1 $2 "The site needs to run Drush 8 or higher for Drupal 8.  See https://pantheon.io/docs/drush-versions/" 12
+    >&2 echo -e "${INVERSE}ERROR:"
+    >&2 echo -e "The site ${sitename}.${multidev} needs to run Drush 8 or higher for Drupal 8.  See https://pantheon.io/docs/drush-versions/${NOINVERSE}"
   fi
 
   eval "$4='$versionmajor'"
