@@ -1,5 +1,7 @@
 #!/usr/bin/php
-/** @noinspection NotOptimalIfConditionsInspection */<?php
+<?php
+/** @noinspection NotOptimalIfConditionsInspection */
+
 /**
  * Iterate over all sites and rename usernames/email addresses.
  */
@@ -97,11 +99,7 @@ foreach ($sites as $site) {
     switch ($framework) {
       case "drupal":
         // Accounts.
-        $result = shell_exec("echo \"$d7sql\" | terminus drush ${site}.${environment} -- sql-cli 2>&1");
-        if (strpos($result, 'error') !== FALSE) {
-          echo $result . PHP_EOL;
-          die(1);
-        }
+        shell_exec_bail("echo \"$d7sql\" | terminus drush ${site}.${environment} -- sql-cli 2>&1");
 
         // @todo Search for other unblocked usernames that start with "advo".
 
@@ -115,30 +113,21 @@ foreach ($sites as $site) {
         $converted_email_count = convert_emails($security_emails, $email_conversions);
         if ($converted_email_count) {
           $security_emails = json_encode($security_emails);
-          $result = shell_exec("terminus drush ${site}.${environment} -- variable-set --format=json update_notify_emails '$security_emails' 2>&1");
-          if (strpos($result, 'error') !== FALSE) {
-            echo $result . PHP_EOL;
-            die(1);
-          }
+          shell_exec_bail("terminus drush ${site}.${environment} -- variable-set --format=json update_notify_emails '$security_emails' 2>&1");
         }
         else {
-          echo "notice: no security update emails to convert." . PHP_EOL;
+          echo "  notice: no security update emails to convert." . PHP_EOL;
         }
 
         break;
 
       case "drupal8":
-        // Accounts.
-        $result = shell_exec("echo \"$d8sql\" | terminus drush $site.$environment -- sql-cli 2>&1");
-        if (strpos($result, 'error') !== FALSE) {
-          echo $result . PHP_EOL;
-          die(1);
-        }
-
-        // @todo Search for other unblocked usernames that start with "advo".
-
         // Security update notification.
         if ($environment === 'dev') {
+          // Pull a fresh DB.
+          echo "  Pulling a fresh DB to $site.$environment. " . PHP_EOL;
+          shell_exec_bail("terminus -q -y env:clone-content $site.live $environment 2>&1");
+
           // Need to dump stderr because terminus is so chatty and we don't want
           // to mix its messages with our JSON.  This _will_ hide errors.
           $security_emails = trim(shell_exec("terminus drush $site.$environment -- config-get --format=json update.settings notification.emails 2>/dev/null"));
@@ -147,19 +136,35 @@ foreach ($sites as $site) {
           }
           $converted_email_count = convert_emails($security_emails, $email_conversions);
           if ($converted_email_count) {
+            echo "  Converting $converted_email_count security update emails. " . PHP_EOL;
             $security_emails = json_encode($security_emails);
-            // @todo pick this up from here.
-            $result = shell_exec("terminus drush $site.$environment -- config-set --input-format=json update.settings notification.emails '$security_emails' 2>&1");
-            if (strpos($result, 'error') !== FALSE) {
-              echo $result . PHP_EOL;
-              die(1);
-            }
-            // @todo quick deploy.
+            // For some reason the JSON format is double-encoding quotes
+            // (at least on Drush 9).  So we use YAML instead.  Lucky enough the
+            // two are similar (enough) with simple arrays.
+            shell_exec_bail("terminus drush $site.$environment -- config-set -y --input-format=yaml update.settings notification.emails '$security_emails' 2>&1");
+
+            // Export config.
+            echo "  Exporting config. " . PHP_EOL;
+            shell_exec_bail("terminus -q connection:set $site.$environment sftp 2>&1");
+            shell_exec("terminus drush $site.$environment -- config-export -y");
+            $commit_message = 'Updated security notification emails to 4k equivalents.';
+            shell_exec_bail("terminus -y env:commit $site.$environment --message='$commit_message' --force 2>&1");
+            shell_exec_bail("terminus -q connection:set $site.$environment git 2>&1");
+
+            // Quick deploy.
+            echo "  Quick Deploy. " . PHP_EOL;
+            shell_exec(__DIR__ . "/pantheon-quick-deploy $site '$commit_message'");
+
           }
           else {
             echo "notice: no security update emails to convert." . PHP_EOL;
           }
         }
+
+        // Accounts.
+        shell_exec_bail("echo \"$d8sql\" | terminus drush $site.$environment -- sql-cli 2>&1");
+
+        // @todo Search for other unblocked usernames that start with "advo".
 
         break;
 
@@ -167,7 +172,7 @@ foreach ($sites as $site) {
         break;
 
       default:
-        echo "Don't know how to handle framework $framework";
+        echo "I don't know how to handle framework $framework";
         die(1);
 
     }
@@ -175,6 +180,23 @@ foreach ($sites as $site) {
 }
 
 echo "Thanks.  All done.";
+
+
+/**
+ * Run shell_exec() and bail if the output contains the word "error".
+ *
+ * PHP doesn't have an easy way to run external commands that can both capture
+ * output _and_ the return code.  This is a happy medium.
+ *
+ * @param string $command
+ */
+function shell_exec_bail(string $command): void {
+  $result = shell_exec($command);
+  if (strpos($result, 'error') !== FALSE) {
+    echo $result . PHP_EOL;
+    die(1);
+  }
+}
 
 /**
  * Convert a list of email addresses.
@@ -192,13 +214,18 @@ echo "Thanks.  All done.";
  */
 function convert_emails(&$emails_to_convert, array $email_conversions): int {
     if (is_string($emails_to_convert)) {
-        var_export($emails_to_convert);
-        $array_emails_to_convert = json_decode($emails_to_convert, TRUE);
-        if (!$emails_to_convert) {
-            echo "Cannot decode JSON " . $emails_to_convert;
-            die(1);
-        }
-        $emails_to_convert = $array_emails_to_convert['update_notify_emails'] ?? $array_emails_to_convert['update.settings:notification.emails'] ?? $array_emails_to_convert;
+      try {
+        $array_emails_to_convert = json_decode($emails_to_convert, TRUE, 512, JSON_THROW_ON_ERROR);
+      }
+      catch (JsonException $e) {
+        echo "JSON decode exception: " . $emails_to_convert;
+        die(1);
+      }
+      if (!$emails_to_convert) {
+        echo "Cannot decode JSON: " . $emails_to_convert;
+        die(1);
+      }
+      $emails_to_convert = $array_emails_to_convert['update_notify_emails'] ?? $array_emails_to_convert['update.settings:notification.emails'] ?? $array_emails_to_convert;
     }
 
     $conversion_count = 0;
