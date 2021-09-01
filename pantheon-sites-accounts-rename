@@ -31,7 +31,7 @@ $email_conversions = [];
 
 $d7sql = '';
 $d8sql = '';
-$wpsql = '';
+$wpsql = [];
 
 while (($account = fgetcsv($stream)) !== FALSE) {
   $row++;
@@ -50,9 +50,10 @@ while (($account = fgetcsv($stream)) !== FALSE) {
   $d8sql .= " UPDATE IGNORE users_field_data SET mail='" . $account[3] . "' WHERE mail='" . $account[2] . "' LIMIT 1; ";
   $d8sql .= " UPDATE IGNORE users_field_data SET name='" . $account[1] . "' WHERE name='" . $account[0] . "' LIMIT 1; ";
 
-  $wpsql .= " UPDATE IGNORE wp_users SET user_email='" . $account[3] . "' WHERE user_email='" . $account[2] . "' LIMIT 1; ";
-  $wpsql .= " UPDATE IGNORE wp_users SET user_login='" . $account[1] . "' WHERE user_login='" . $account[0] . "' LIMIT 1; ";
-  $wpsql .= " UPDATE IGNORE wp_users SET user_nicename='" . $account[1] . "' WHERE user_nicename='" . $account[0] . "' LIMIT 1; ";
+  // WP won't let us run compound SQL statements.  Instead we need to run multiple times.
+  $wpsql[] = " UPDATE IGNORE wp_users SET user_email='" . $account[3] . "' WHERE user_email='" . $account[2] . "' LIMIT 1";
+  $wpsql[] = " UPDATE IGNORE wp_users SET user_login='" . $account[1] . "' WHERE user_login='" . $account[0] . "' LIMIT 1";
+  $wpsql[] = " UPDATE IGNORE wp_users SET user_nicename='" . $account[1] . "' WHERE user_nicename='" . $account[0] . "' LIMIT 1";
 
 }
 fclose($stream);
@@ -70,27 +71,18 @@ if (!in_array($CONFIRM, ['y', 'Y'])) {
   exit;
 }
 
-//var_export($d7sql);
-//var_export($d8sql);
-//var_export($wpsql);
-
 echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
 
-# @todo uncomment.
 ## D7
 //$sites=["aftorg"];
-## D8
-$sites=["columbia-sps"];
 ## D9
-//$sites="advotools"
+//$sites=["columbia-sps"];
 ## WP
-//$sites="advomatic"
-//$sites=`terminus site:list --format=list --field=name | sort`
+//$sites=["advomatic"];
+$sites= shell_exec("terminus site:list --format=list --field=name | sort");
 
 foreach ($sites as $site) {
-  # @todo uncomment
-  $framework = 'drupal8';
-//  $framework = trim(shell_exec("terminus site:info --field=framework $site"));
+  $framework = trim(shell_exec("terminus site:info --field=framework $site"));
   # @todo uncomment
   $environments = ['dev'];
 //  $environments= shell_exec("terminus env:list $site --format=list --field=id");
@@ -99,21 +91,26 @@ foreach ($sites as $site) {
     switch ($framework) {
       case "drupal":
         // Accounts.
-        shell_exec_bail("echo \"$d7sql\" | terminus drush ${site}.${environment} -- sql-cli 2>&1");
+        shell_exec_bail("echo \"$d7sql\" | terminus drush $site.$environment -- sql-cli 2>&1");
 
-        // @todo Search for other unblocked usernames that start with "advo".
+        // Search for other unblocked usernames that start with "advo".
+        $unblocked_advoteam = trim(shell_exec("echo \"SELECT name, mail FROM users WHERE (name LIKE 'advo%' or mail LIKE '%@advomatic.com') AND status = 1\" | terminus drush $site.$environment sql-cli  2>&1 | grep -v \"This environment is in read-only Git mode\" | grep -v \" drush sql-cli \""));
+        if ($unblocked_advoteam) {
+          echo "  UNBLOCKED ADVOTEAM ACCOUNTS. Probably test accounts.  Please review" . PHP_EOL;
+          echo $unblocked_advoteam . PHP_EOL;
+        }
 
         // Security update notification.
-        // Need to dump stderr because terminus is so chatty and we don't want
+        // Need to dump stderr because terminus is so chatty, and we don't want
         // to mix its messages with our JSON.  This _will_ hide errors.
-        $security_emails = trim(shell_exec("terminus drush ${site}.${environment} -- variable-get --format=json update_notify_emails 2>/dev/null"));
+        $security_emails = trim(shell_exec("terminus drush $site.$environment -- variable-get --format=json update_notify_emails 2>/dev/null"));
         if (!$security_emails) {
           die('Could not retrieve update_notify_emails');
         }
         $converted_email_count = convert_emails($security_emails, $email_conversions);
         if ($converted_email_count) {
-          $security_emails = json_encode($security_emails);
-          shell_exec_bail("terminus drush ${site}.${environment} -- variable-set --format=json update_notify_emails '$security_emails' 2>&1");
+          $security_emails = json_encode($security_emails, JSON_THROW_ON_ERROR);
+          shell_exec_bail("terminus drush $site.$environment -- variable-set --format=json update_notify_emails '$security_emails' 2>&1");
         }
         else {
           echo "  notice: no security update emails to convert." . PHP_EOL;
@@ -124,12 +121,16 @@ foreach ($sites as $site) {
       case "drupal8":
         // Security update notification.
         if ($environment === 'dev') {
-          // Pull a fresh DB.
-          echo "  Pulling a fresh DB to $site.$environment. " . PHP_EOL;
-          shell_exec_bail("terminus -q -y env:clone-content $site.live $environment 2>&1");
+          // We're going to write/deploy config later, so pull a fresh copy of
+          // the database, as long as this site's live environment actually
+          // exists.
+          if (trim(shell_exec("terminus env:info $site.$environment --fields=initialized --format=string"))) {
+            echo "  Pulling a fresh DB to $site.$environment. " . PHP_EOL;
+            shell_exec_bail("terminus -q -y env:clone-content $site.live $environment 2>&1");
+          }
 
-          // Need to dump stderr because terminus is so chatty and we don't want
-          // to mix its messages with our JSON.  This _will_ hide errors.
+          // Need to dump stderr because terminus is so chatty, and we don't
+          // want to mix its messages with our JSON.  This _will_ hide errors.
           $security_emails = trim(shell_exec("terminus drush $site.$environment -- config-get --format=json update.settings notification.emails 2>/dev/null"));
           if (!$security_emails) {
             die('Could not retrieve update_notify_emails');
@@ -137,9 +138,9 @@ foreach ($sites as $site) {
           $converted_email_count = convert_emails($security_emails, $email_conversions);
           if ($converted_email_count) {
             echo "  Converting $converted_email_count security update emails. " . PHP_EOL;
-            $security_emails = json_encode($security_emails);
+            $security_emails = json_encode($security_emails, JSON_THROW_ON_ERROR);
             // For some reason the JSON format is double-encoding quotes
-            // (at least on Drush 9).  So we use YAML instead.  Lucky enough the
+            // (at least on Drush 9).  So we use YAML instead.  Luckily the
             // two are similar (enough) with simple arrays.
             shell_exec_bail("terminus drush $site.$environment -- config-set -y --input-format=yaml update.settings notification.emails '$security_emails' 2>&1");
 
@@ -164,22 +165,32 @@ foreach ($sites as $site) {
         // Accounts.
         shell_exec_bail("echo \"$d8sql\" | terminus drush $site.$environment -- sql-cli 2>&1");
 
-        // @todo Search for other unblocked usernames that start with "advo".
+        // Search for other unblocked usernames that start with "advo".
+        $unblocked_advoteam = trim(shell_exec("echo \"SELECT name, mail FROM users_field_data WHERE (name LIKE 'advo%' or mail LIKE '%@advomatic.com') AND status = 1\" | terminus drush $site.$environment sql-cli  2>&1 | grep -v \"This environment is in read-only Git mode\" | grep -v \" drush sql-cli \""));
+        if ($unblocked_advoteam) {
+          echo "  UNBLOCKED ADVOTEAM ACCOUNTS. Probably test accounts.  Please review" . PHP_EOL;
+          echo $unblocked_advoteam . PHP_EOL;
+        }
 
         break;
 
       case "wordpress":
+        // Accounts.
+        foreach ($wpsql as $sql) {
+          shell_exec_bail("terminus wp $site.$environment -- db query \"$sql\" 2>&1");
+        }
+
         break;
 
       default:
-        echo "I don't know how to handle framework $framework";
+        echo "I don't know how to handle framework $framework" . PHP_EOL;
         die(1);
 
     }
   }
 }
 
-echo "Thanks.  All done.";
+echo "Thanks.  All done." . PHP_EOL;
 
 
 /**
