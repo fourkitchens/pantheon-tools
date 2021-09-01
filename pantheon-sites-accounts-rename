@@ -73,19 +73,20 @@ if (!in_array($CONFIRM, ['y', 'Y'])) {
 
 echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
 
+$sites= shell_exec("terminus site:list --format=list --field=name | sort");
+## Debug
 ## D7
 //$sites=["aftorg"];
 ## D9
 //$sites=["columbia-sps"];
 ## WP
 //$sites=["advomatic"];
-$sites= shell_exec("terminus site:list --format=list --field=name | sort");
 
 foreach ($sites as $site) {
   $framework = trim(shell_exec("terminus site:info --field=framework $site"));
-  # @todo uncomment
-  $environments = ['dev'];
-//  $environments= shell_exec("terminus env:list $site --format=list --field=id");
+  $environments= shell_exec("terminus env:list $site --format=list --field=id");
+  ## Debug
+//  $environments = ['dev'];
   foreach ($environments as $environment) {
     echo "Converting $framework site: $site.$environment" . PHP_EOL;
     switch ($framework) {
