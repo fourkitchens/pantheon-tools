@@ -35,7 +35,7 @@ for site in $sites; do
   case $FRAMEWORK in
     drupal|drupal8)
 
-      # Sometimes the live environment doesn't exist yet, or there are errrors in settings.php that prevent CLI commands.
+      # Sometimes the live environment doesn't exist yet, or there are errors in settings.php that prevent CLI commands.
       for environment in 'live' 'dev'; do
 
         drushmajorversion=''
