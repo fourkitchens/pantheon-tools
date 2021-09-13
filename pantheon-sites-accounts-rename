@@ -9,7 +9,7 @@
 # Instructions.
 $CSV = $argv[1];
 if (!$CSV) {
-  $CSV = readline("CSV filename (with a header row, and columns for: \"existing username\", \"new username\", \"existing email address\", \"new email address\")?");
+  $CSV = readline("CSV filename (with a header row, and columns for: \"existing username\", \"new username\", \"existing email address\", \"new email address\") (or next time, include this as an argument)?");
 }
 
 # Can we access/read the file?
@@ -60,20 +60,29 @@ fclose($stream);
 
 echo PHP_EOL . "$row accounts to convert." . PHP_EOL;
 
-if (empty($argv[2])) {
-  $CONFIRM = readline("Account email address and username, and security notification emails will be converted.  Confirm (y/N)");
-}
-else {
-  $CONFIRM = $argv[2];
-}
+$CONFIRM = readline("Account email address and username, and security notification emails will be converted.  Confirm (y/N)");
 if (!in_array($CONFIRM, ['y', 'Y'])) {
   echo "abort";
   exit;
 }
 
-echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
+echo PHP_EOL;
 
-$sites= shell_exec("terminus site:list --format=list --field=name | sort");
+$SITES = $argv[2];
+if (!$SITES) {
+  $SITES = readline('List of sites to convert (comma-separated).  You could obtain this with something like `terminus site:list --format=list --field=name --filter="frozen!=1" --org=Advomatic | sort | gsed -z "s/\n/,/g"` (or next time, include this as the second argument)?');
+}
+$SITES = array_filter(explode(',', $SITES), 'trim');
+echo count($SITES) . " sites to convert: " . implode(', ', $SITES) . PHP_EOL . PHP_EOL;
+
+
+$CONFIRM_AUTO_DEPLOY = readline("Any Drupal 8/9 sites will need to deploy config changes from dev->test->live.  Can we assume that there is no undeployed work on these sites that will be accidentally included? (Y/n)");
+$CONFIRM_AUTO_DEPLOY = !$CONFIRM_AUTO_DEPLOY || in_array($CONFIRM_AUTO_DEPLOY, ['y', 'Y']);
+if (!$CONFIRM_AUTO_DEPLOY) {
+  echo "Okay, we'll ask you to confirm each deploy (if there are any)." . PHP_EOL;
+}
+
+echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
 ## Debug
 ## D7
 //$sites=["aftorg"];
@@ -82,7 +91,7 @@ $sites= shell_exec("terminus site:list --format=list --field=name | sort");
 ## WP
 //$sites=["advomatic"];
 
-foreach ($sites as $site) {
+foreach ($SITES as $site) {
   $framework = trim(shell_exec("terminus site:info --field=framework $site"));
   $environments= shell_exec("terminus env:list $site --format=list --field=id");
   ## Debug
@@ -155,7 +164,12 @@ foreach ($sites as $site) {
 
             // Quick deploy.
             echo "  Quick Deploy. " . PHP_EOL;
-            shell_exec(__DIR__ . "/pantheon-quick-deploy $site '$commit_message'");
+            if (!$CONFIRM_AUTO_DEPLOY) {
+              readline("Security notification config on $site.$environment has been changed.  Please open a new terminal to deploy this (maybe using `pantheon-quick-deploy`).  Ready to continue? (Y)");
+            }
+            else {
+              shell_exec(__DIR__ . "/pantheon-quick-deploy $site '$commit_message'");
+            }
 
           }
           else {
