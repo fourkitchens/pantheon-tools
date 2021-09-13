@@ -93,7 +93,7 @@ echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
 
 foreach ($SITES as $site) {
   $framework = trim(shell_exec("terminus site:info --field=framework $site"));
-  $environments= shell_exec("terminus env:list $site --format=list --field=id");
+  $environments= array_filter(explode(',', preg_replace('![\r\n]!', ',', shell_exec("terminus env:list $site --format=list --field=id"))), 'trim');
   ## Debug
 //  $environments = ['dev'];
   foreach ($environments as $environment) {
