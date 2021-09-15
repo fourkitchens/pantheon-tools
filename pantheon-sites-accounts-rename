@@ -3,7 +3,8 @@
 /** @noinspection NotOptimalIfConditionsInspection */
 
 /**
- * Iterate over all sites and rename usernames/email addresses.
+ * @file
+ * Iterate over all a given list of sites and rename usernames/email addresses.
  */
 
 # Instructions.
@@ -93,6 +94,8 @@ echo "This will take a really long time..." . PHP_EOL . PHP_EOL;
 
 foreach ($SITES as $site) {
   $framework = trim(shell_exec("terminus site:info --field=framework $site"));
+  echo PHP_EOL . "**Converting $framework site: $site**" . PHP_EOL;
+
   $environments= array_filter(explode(',', preg_replace('![\r\n]!', ',', shell_exec("terminus env:list $site --format=list --field=id"))), 'trim');
   ## Debug
 //  $environments = ['dev'];
@@ -162,8 +165,8 @@ foreach ($SITES as $site) {
             shell_exec_bail("terminus -y env:commit $site.$environment --message='$commit_message' --force 2>&1");
             shell_exec_bail("terminus -q connection:set $site.$environment git 2>&1");
 
-            // Quick deploy.
-            echo "  Quick Deploy. " . PHP_EOL;
+            // Deploy.
+            echo "  Deploy. " . PHP_EOL;
             if (!$CONFIRM_AUTO_DEPLOY) {
               readline("Security notification config on $site.$environment has been changed.  Please open a new terminal to deploy this (maybe using `pantheon-quick-deploy`).  Ready to continue? (Y)");
             }
@@ -183,7 +186,7 @@ foreach ($SITES as $site) {
         // Search for other unblocked usernames that start with "advo".
         $unblocked_advoteam = trim(shell_exec("echo \"SELECT name, mail FROM users_field_data WHERE (name LIKE 'advo%' or mail LIKE '%@advomatic.com') AND status = 1\" | terminus drush $site.$environment sql-cli  2>&1 | grep -v \"This environment is in read-only Git mode\" | grep -v \" drush sql-cli \""));
         if ($unblocked_advoteam) {
-          echo "  UNBLOCKED ADVOTEAM ACCOUNTS. Probably test accounts.  Please review" . PHP_EOL;
+          echo "  UNBLOCKED ADVOTEAM ACCOUNTS. Test accounts in non-live environments can probably be ignored.  Please review" . PHP_EOL;
           echo $unblocked_advoteam . PHP_EOL;
         }
 
