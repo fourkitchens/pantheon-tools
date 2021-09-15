@@ -69,22 +69,10 @@ multidev_update() {
       connection_mode "$SITENAME" "$MULTIDEV" 'git'
       ;;
     drupal8)
-      # We don't actually care what version of Drush is running, but this function
-      # will bail if it's a totally incompatible version.
-      local drushmajorversion=''
-      local drushminorversion=''
-      local drushpointversion=''
-      drupal_get_drush_version "$sitename" $framework "$MULTIDEV" drushmajorversion drushminorversion drushpointversion
-
-      drupal8_check_config_management $sitename $multidev
-      local hasconfigmanagement=$?
-      multidev_upstream_update $sitename $framework $multidev
-      connection_mode "$SITENAME" "$MULTIDEV" 'sftp'
-      drupal8_update $sitename $multidev
-      if [ "$hasconfigmanagement" == 1 ]; then
-        drupal_config_export $sitename $multidev 1
-      fi
-      connection_mode "$SITENAME" "$MULTIDEV" 'git'
+      echo -e "All Drupal 8/9 sites should now be updated with Composer only.  You may run the \`pantheon-multidev-merge\` script when you are ready to merge and deploy."
+      echo -e "See https://docs.google.com/document/d/1JvoTX49mcQ2m8kQblQIMpJFP_Fw8eCE_3xQWe7zBLc4/edit#"
+      echo -e "You may run the \`pantheon-multidev-merge\` script when you are ready to merge and deploy."
+      exit 0
       ;;
     *)
       echo -e "$framework is not yet supported.  Do whatever it is that you do to run security updates on the multi-site, then continue."
