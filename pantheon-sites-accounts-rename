@@ -96,7 +96,7 @@ foreach ($SITES as $site) {
   $framework = trim(shell_exec("terminus site:info --field=framework $site"));
   echo PHP_EOL . "**Converting $framework site: $site**" . PHP_EOL;
 
-  $environments= array_filter(explode(',', preg_replace('![\r\n]!', ',', shell_exec("terminus env:list $site --format=list --field=id"))), 'trim');
+  $environments= array_filter(explode(',', preg_replace('![\r\n]!', ',', shell_exec("terminus env:list $site --filter='initialized=1' --format=list --field=id"))), 'trim');
   ## Debug
 //  $environments = ['dev'];
   foreach ($environments as $environment) {

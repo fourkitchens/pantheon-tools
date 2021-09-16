@@ -51,7 +51,7 @@ sites=`terminus site:list --format=list --field=name | sort`
 for site in $sites; do
   FRAMEWORK=''
   get_framework "$site" FRAMEWORK
-  environments=`terminus env:list $site --format=list --field=id`
+  environments=`terminus env:list $site --format=list --field=id --filter='initialized=1'`
   for environment in $environments; do
     echo "Blocking from $FRAMEWORK $site.$environment"
     case $FRAMEWORK in
