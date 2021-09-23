@@ -10,22 +10,26 @@ if [[ ! -d "$FUNCTIONS_DIR" ]]; then FUNCTIONS_DIR="$PWD"; fi
 ##
 check_deployed() {
   local sitename=$1
-  local dest=$2
+  local env=$2
   
-  echo -e "Checking for undeployed code in ${sitename}."
+  echo -e "Checking for undeployed code in ${sitename}.${env}."
   
   #Check if previous commit was deployed in "live"
-  check=$(terminus env:code-log ${sitename}.${dest} --field=labels | head -1 | grep "live")
+  check=$(terminus env:code-log ${sitename}.${env} --field=labels | head -1 | grep "live")
 
   if [ -z "$check" ]; then
-    #Get site ID
-    id=$(terminus site:info ${sitename} --field=ID)
-    echo -e "There is undeployed code in the ${dest} environment."
-    echo -e "https://dashboard.pantheon.io/sites/${id}#${dest}/deploy"
+    siteuuid=$(terminus site:info ${sitename} --field=ID)
+    echo -e "There is undeployed code in the ${env} environment."
+    # In order to see the undeployed code, we need to link to the one after.
+    envtoshow="test"
+    if [ "$env" == "test" ]; then
+      envtoshow="live"
+    fi
+    echo -e "https://dashboard.pantheon.io/sites/${siteuuid}#${envtoshow}/deploy"
     read -p "${UNDERLINE}Still wish to continue?: [y/${BOLD}n${NOBOLD}]${NOUNDERLINE} " confirm;
     case $confirm in
       [Yy])
-        echo -e "Please double check site after deploy"
+        echo -e "Please double check site after deploy."
        ;;
       *)
         exit
