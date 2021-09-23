@@ -56,7 +56,7 @@ multidev_create() {
     echo -e "Creating multidev ${multidev} from ${from_env}.  Please wait (this can take a long time)..."
     terminus multidev:create ${sitename}.${from_env} ${multidev}
     if [ $? != 0 ]; then
-      >&2 echo -e "Error: Could not create multidev. Maybe the site is already at its max of 10 multidevs.  Check the Pantheon dashboard."
+      >&2 echo -e "Error: Could not create multidev. Maybe the site is already at its max number of multidevs.  Check the Pantheon dashboard."
       exit 5;
     fi
     speak_message "Multidev created."
