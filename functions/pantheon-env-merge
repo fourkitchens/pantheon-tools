@@ -104,6 +104,8 @@ env_merge() {
       if [ $? != 0 ]; then
         error_no_cleanup "Error running drush updatedb." 14
       fi
+      echo -e "Clearing caches one more time."
+      terminus -q env:clear-cache ${sitename}.${env_dest}
       ;;
     drupal8)
       echo -e "Checking for database updates."
@@ -112,6 +114,8 @@ env_merge() {
         error_no_cleanup "Error running drush updatedb." 14
       fi
       drupal_config_import "$sitename" "$env_dest"
+      echo -e "Clearing caches one more time."
+      terminus -q env:clear-cache ${sitename}.${env_dest}
       ;;
     *)
       # @todo WP.
