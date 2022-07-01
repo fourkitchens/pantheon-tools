@@ -32,7 +32,7 @@ drupal_get_drush_version() {
   local version=`terminus drush ${sitename}.${multidev} -- --version --pipe  2>/dev/null`
 
   if [ "$version" == "" ]; then
-    echo "Cannot determine the version of Drush.  Proceeding assuming that everything is going to work out fine."
+    echo "$sitename: Cannot determine the version of Drush.  Proceeding assuming that everything is going to work out fine."
     eval "$4='0'"
     return;
   fi
