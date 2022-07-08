@@ -21,7 +21,7 @@ commit() {
   local multidev=$2
   local default_commit_message=$3
 
-  echo -e "Committing code to $multidev on site $sitename"
+  echo -e "feat: Committing code to $multidev on site $sitename"
   # Need to clear the cache before committing, otherwise it may not recognize
   # that files have changed.
   terminus -q env:clear-cache ${sitename}.${multidev}

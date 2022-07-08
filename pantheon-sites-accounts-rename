@@ -161,7 +161,7 @@ foreach ($SITES as $site) {
             echo "  Exporting config. " . PHP_EOL;
             shell_exec_bail("terminus -q connection:set $site.$environment sftp 2>&1");
             shell_exec("terminus drush $site.$environment -- config-export -y");
-            $commit_message = 'Updated security notification emails to 4k equivalents.';
+            $commit_message = 'feat: Updated security notification emails to 4k equivalents.';
             shell_exec_bail("terminus -y env:commit $site.$environment --message='$commit_message' --force 2>&1");
             shell_exec_bail("terminus -q connection:set $site.$environment git 2>&1");
 

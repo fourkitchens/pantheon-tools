@@ -49,7 +49,7 @@ wp_update() {
       *)
         if [ "$plugin" != "" ]; then
           wp_update_plugin $sitename $multidev $plugin
-          commit $sitename $multidev "Security update for plugin $plugin."
+          commit $sitename $multidev "feat: Security update for plugin $plugin."
         fi
         ;;
     esac

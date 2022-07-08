@@ -75,7 +75,7 @@ drupal8_update() {
       *)
         if [ "$module" != "" ]; then
           drupal_update_module $sitename $multidev $module
-          commit $sitename $multidev "Security update for $module module."
+          commit $sitename $multidev "feat: Security update for $module module."
         fi
         ;;
     esac

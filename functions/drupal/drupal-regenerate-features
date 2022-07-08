@@ -32,6 +32,6 @@ drupal_regenerate_features() {
     if [ $? != 0 ]; then
       cleanup_on_error $sitename $multidev "Error regenerating features." 12
     fi
-    commit $sitename $multidev "Updated all features."
+    commit $sitename $multidev "feat: Updated all features."
   fi
 }
