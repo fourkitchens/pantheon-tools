@@ -11,18 +11,20 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #set -x
 
 MODULE=$1
-if [ "$MODULE" == "" ]; then
+if [[ -z "$MODULE" ]]; then
   read -p "${UNDERLINE}What module do you want a report about? Enter its machine name.  e.g. print  To test Drupal Core, type system:${NOUNDERLINE} [system] " MODULE
-  if [ "$MODULE" == "" ]; then
+  if [[ -z "$MODULE" ]]; then
     MODULE='system'
   fi
 fi
 
 VERBOSITY=$2
-if [ "$VERBOSITY" == "" ]; then
+if [[ -z "$VERBOSITY" ]]; then
   read -p "${UNDERLINE}Also list sites that don't have the module? (Y/${BOLD}N${NOBOLD})${NOUNDERLINE} [N] "  VERBOSITY
   case $VERBOSITY in
-    [Yy]) ;;
+    [Yy])
+      VERBOSITY=y
+      ;;
     *)
       VERBOSITY=n
       ;;
@@ -30,17 +32,17 @@ if [ "$VERBOSITY" == "" ]; then
 fi
 
 ORG=$3
-if [ "$ORG" == "" ]; then
+if [[ -z "$ORG" ]]; then
   read -p "${UNDERLINE}Do you want to check sites in a specific Pantheon organization? Enter the organization name, e.g. four-kitchens:${NOUNDERLINE} [ ] " ORG
 fi
 
 TAG=$4
-if [ "$TAG" == "" ] && [ "$ORG" != "" ]; then
+if [[ -z "$TAG" && -n "$ORG" ]]; then
   read -p "${UNDERLINE}Do you want to check sites with a certain tag? Enter the tag name, e.g. cc-d7, cc-d9, cc-drupal:${NOUNDERLINE} [ ] " TAG
 fi
 
-if [ "$ORG" != "" ]; then
-  if [ "$TAG" != "" ]; then
+if [[ -n "$ORG" ]]; then
+  if [[ -n "$TAG" ]]; then
     sites=$(terminus org:site:list ${ORG} --format=list --field=name --filter="frozen!=1" --tag=${TAG} | sort)
   else
     sites=$(terminus org:site:list ${ORG} --format=list --field=name --filter="frozen!=1" | sort)
