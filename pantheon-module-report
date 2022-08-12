@@ -5,7 +5,7 @@
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-script-colours"
-. "$DIR/functions/pantheon-get-FRAMEWORK"
+. "$DIR/functions/pantheon-get-framework"
 . "$DIR/functions/drupal/drupal-get-drush-version"
 
 #set -x
