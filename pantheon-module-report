@@ -39,8 +39,10 @@ fi
 TAG=$4
 if [[ -z "$TAG" && -n "$ORG" ]]; then
   read -p "${UNDERLINE}Do you want to check sites with a certain tag? Enter the tag name, e.g. cc-d7, cc-d9, cc-drupal:${NOUNDERLINE} [ ] " TAG
+  echo -e "${PROTIP} You can use these answers as arguments of this script to get to this point faster.  E.g. \`pantheon-module-report system n four-kitchens cc-drupal\`"
 fi
 
+echo -e "Searching sites..."
 if [[ -n "$ORG" ]]; then
   if [[ -n "$TAG" ]]; then
     sites=$(terminus org:site:list ${ORG} --format=list --field=name --filter="frozen!=1" --tag=${TAG} | sort)
