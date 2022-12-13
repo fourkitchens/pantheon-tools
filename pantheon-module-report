@@ -77,7 +77,7 @@ for site in $sites; do
         fi
 
         modulestatus=$(echo "$drushoutput" | fgrep -i 'enabled')
-        trynext=$(echo "$drushoutput" | grep 'needs a higher bootstrap level\|command terminated abnormally')
+        trynext=$(echo "$drushoutput" | grep 'needs a higher bootstrap level\|command terminated abnormally\|option does not exist')
         if [ -n "$trynext" ]; then
           if [ "$environment" == 'dev' ]; then
             echo "$site: Could not run drush commands against the live or dev environments."
