@@ -16,21 +16,22 @@ This includes things like:
 2. `terminus auth:login` to store an access token.
 3. Upload your SSH key to the Pantheon dashboard.
 4. Add Terminus to your Path.  For example, if Terminus is installed at `~/.composer/vendor/bin/terminus` then you need to add `~/.composer/vendor/bin` to your path.
-5. Add the directory containing pantheon-tools to your Path.
+5. Use Git to checkout this pantheon-tools repository, maybe to the same place you store your other code projects.  
+6. Add the directory containing pantheon-tools to your Path.
 
 ### How to add something to your path
   E.g.
 
 ```
 export PATH="$PATH:$HOME/.composer/vendor/bin"
-export PATH="$PATH:$HOME/Sites/pantheon-tools"
+export PATH="$PATH:$HOME/path/to/pantheon-tools"
 ```
 
 You typically add these lines to `~/.profile` or `~/.bash_profile`.
 
 Note that an alias will not work.
 
-## Usage
+## Usage 
 1. This may be getting a lot of updates, so first ensure that you have the latest version.
 ```
 cd /path/to/the/pantheon-tools
