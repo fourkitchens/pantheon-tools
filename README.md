@@ -1,5 +1,7 @@
 # pantheon-tools
-Tools to run actions against a Pantheon site, including many best practices for development workflow. 
+Tools to improve your development workflow on Pantheon sites including:
+* Tips to make your workflow smoother/faster/less-risky.
+* automating important steps that are easy to forget.
 
 This includes things like:
 * Sort out configuration problems before you move on to the next step.
