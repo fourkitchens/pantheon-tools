@@ -29,6 +29,10 @@ mysql_username=`echo -e "$connection_info" | grep mysql_username | awk '{print $
 mysql_password=`echo -e "$connection_info" | grep mysql_password | awk '{print $3}'`
 mysql_database=`echo -e "$connection_info" | grep mysql_database | awk '{print $3}'`
 
+if [ "$mysql_database" == '' ]; then
+    mysql_database="pantheon"
+fi
+
 >&2 echo -e "--Now waking up the server.--"
 terminus env:wake $1.$2
 
