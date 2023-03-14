@@ -30,6 +30,10 @@ mysql_username=`echo -e "$connection_info" | grep mysql_username | awk '{print $
 mysql_password=`echo -e "$connection_info" | grep mysql_password | awk '{print $3}'`
 mysql_database=`echo -e "$connection_info" | grep mysql_database | awk '{print $3}'`
 
+if [ "$mysql_database" == '' ]; then
+    mysql_database="pantheon"
+fi
+
 # First "Wake up" the server.
 >&2 echo -e "--Now waking up the server.--"
 terminus env:wake $1.$2
@@ -48,7 +52,7 @@ if command -v pv >/dev/null 2>&1; then
 fi
 
 #Transfer the Database.
->&2 echo -e "--Now transfering the database.--"
+>&2 echo -e "--Now transferring the database.--"
 mysqldump --no-autocommit --single-transaction -B --column-statistics=0 --opt --quote-names --user=$mysql_username --host=127.0.0.1 --port=$mysql_port --password=$mysql_password $mysql_database | $PV
 
 # Kill the SSH session.
