@@ -27,7 +27,7 @@ export PATH="$PATH:$HOME/.composer/vendor/bin"
 export PATH="$PATH:$HOME/path/to/pantheon-tools"
 ```
 
-Depends on the system you are using, you need to add the above two paths to `~/.profile`, `~/.bash_profile`, or `~/.zshrc`.
+Depending on your system, you must add the above paths to `~/.profile`, `~/.bash_profile`, or `~/.zshrc`.
 
 Note that an alias will not work.
 
