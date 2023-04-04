@@ -2,12 +2,8 @@
 # pantheon-db-cli
 # Get a MySQL commandline on a Pantheon server that requires an SSH tunnel.
 
-# check if mysql is installed and fail otherwise
-command -v mysql >/dev/null 2>&1
-  if [[ $? -ne 0 ]]; then
-    echo "mysql is not installed."
-      exit 1
-  fi
+# Check if mysql is installed locally.
+command -v mysql >/dev/null 2>&1 || { echo >&2 "FAILURE. MySQL is required. Please install mysql locally and run the command again."; exit 1; }
 
 if [[ $# -lt 2 ]] ; then
 >&2  echo -e 'Usage:'
