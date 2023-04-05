@@ -3,7 +3,7 @@
 # Dump a DB from a Pantheon environment.
 
 # Check if mysql is installed locally.
-command -v mysql >/dev/null 2>&1 || { echo >&2 "FAILURE. MySQL is required. Please install mysql locally and run the command again."; exit 1; }
+command -v mysqldump >/dev/null 2>&1 || { echo >&2 "FAILURE. MySQL is required. Please install mysql locally and run the command again."; exit 1; }
 
 if [[ $# -lt 2 ]] ; then
 >&2  echo -e 'Usage:'
