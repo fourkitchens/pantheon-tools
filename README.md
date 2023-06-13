@@ -44,52 +44,57 @@ pantheon-security-update
 
 The script will ask you questions along the way (and give you hints when there's ways to add arguments to make things faster).
 
-## Scripts
+## Scripts (Categories)
 
-### pantheon-security-update
+### Deploy
+| Name | Description |
+|--|--|
+| `pantheon-quick-deploy` | Quickly deploy something from dev->test->live |
+| `pantheon-commit-and-quick-deploy` | Commit any local changes and then deploy them |
+| `pantheon-deploy` | Deploy dev->test or test->live |
+| `pantheon-check-undeployed` | Check for undeployed code before merging/deploying |
+| `pantheon-commit` | Commit code |
 
-Run security updates on a Pantheon site by first creating a new multi-dev environment.
 
-### pantheon-multidev-create
+### Report
+| Name | Description |
+|--|--|
+| `pantheon-drupal-status-report` | Report a summary of the Status Report for every Drupal site |
+| `pantheon-sites-report` | Get a metric about all sites (e.g. PHP version, or Upstream) |
+| `pantheon-module-report` | Get a list of which sites use which version of a module |
 
-Create a new multi-dev environment.
+### Update
+| Name | Description |
+|--|--|
+| `pantheon-security-update` | Run security updates on a Pantheon site by first creating a new multi-dev environment |
 
-### pantheon-multidev-merge
+### Database
+| Name | Description |
+|--|--|
+| `pantheon-db-dump` | Dump a database from any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database |
+| `pantheon-db-cli` | Connect to the database of any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database |
 
-Merge a multi-dev environment into master (the dev environment).
+### Environment
+| Name | Description |
+|--|--|
+| `pantheon-multidev-create` | Create a new multi-dev environment |
+| `pantheon-multidev-merge` | Merge a multi-dev environment into master (the dev environment) |
+| `pantheon-multidev-delete` | Delete the multi-dev |
+| `pantheon-get-multidev-url` | Get the framework for the given site |
+| `pantheon-env-merge` | Merge one environment to another |
+| `pantheon-script-colours` | Sets colour variables used throughout other scripts |
+| `pantheon-get-framework` | Get the framework for the given site |
+| `pantheon-terminus-version` | Checks Terminus version |
+| `pantheon-terminus-check` | Checks that Terminus is installed |
+| `pantheon-error-no-cleanup` | If there is an error, it is displayed without clearing anything |
+| `pantheon-connection-mode` | Set the connection mode for the env |
+| `pantheon-move-domains` | Move custom domains from one site to another |
+| `pantheon-choose-site` | |
+| `speak-message` | |
 
-### pantheon-quick-deploy
-
-Quickly deploy something from dev->test->live.
-
-### pantheon-commit-and-quick-deploy
-
-Commit any local changes and then deploy them.
-
-### pantheon-db-dump
-
-Dump a database from any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database.
-
-### pantheon-db-cli
-
-Connect to the database of any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database.
-
-### pantheon-module-report
-
-Get a list of which sites use which version of a module.
-
-### pantheon-sites-report
-
-Get a metric about all sites (e.g. PHP version, or Upstream).
-
-### pantheon-offboard
-
-Offboard a staff member from your organization.
-
-### pantheon-deploy
-
-Deploy dev->test or test->live.
-
-### pantheon-drupal-status-report
-
-Report a summary of the Status Report for every Drupal site.
+### Accounts
+| Name | Description |
+|--|--|
+| `pantheon-sites-accounts-rename` | Iterate over all a given list of sites and rename usernames/email addresses |
+| `pantheon-authenticate` | Authenticate with Terminus |
+| `pantheon-offboard` | Offboard a staff member from your organization |
