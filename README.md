@@ -44,52 +44,42 @@ pantheon-security-update
 
 The script will ask you questions along the way (and give you hints when there's ways to add arguments to make things faster).
 
-## Scripts
+## Scripts (Categories)
 
-### pantheon-security-update
+### Deploy
+| Command | Description |
+|--|--|
+| `pantheon-quick-deploy` | Quickly deploy something from dev->test->live |
+| `pantheon-commit-and-quick-deploy` | Commit any local changes and then deploy them |
+| `pantheon-deploy` | Deploy dev->test or test->live |
 
-Run security updates on a Pantheon site by first creating a new multi-dev environment.
+### Report
+| Command | Description |
+|--|--|
+| `pantheon-drupal-status-report` | Report a summary of the Status Report for every Drupal site |
+| `pantheon-sites-report` | Get a metric about all sites (e.g. PHP version, or Upstream) |
+| `pantheon-module-report` | Get a list of which sites use which version of a module |
 
-### pantheon-multidev-create
+### Update
+| Command | Description |
+|--|--|
+| `pantheon-security-update` | Run security updates on a Pantheon site by first creating a new multi-dev environment |
 
-Create a new multi-dev environment.
+### Database
+| Command | Description |
+|--|--|
+| `pantheon-db-dump` | Dump a database from any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database |
+| `pantheon-db-cli` | Connect to the database of any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database |
 
-### pantheon-multidev-merge
+### Environment
+| Command | Description |
+|--|--|
+| `pantheon-multidev-create` | Create a new multi-dev environment |
+| `pantheon-multidev-merge` | Merge a multi-dev environment into master (the dev environment) |
+| `pantheon-move-domains` | Move custom domains from one site to another |
 
-Merge a multi-dev environment into master (the dev environment).
-
-### pantheon-quick-deploy
-
-Quickly deploy something from dev->test->live.
-
-### pantheon-commit-and-quick-deploy
-
-Commit any local changes and then deploy them.
-
-### pantheon-db-dump
-
-Dump a database from any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database.
-
-### pantheon-db-cli
-
-Connect to the database of any Pantheon site.  Even VIP clients that require an SSH tunnel to connect to the database.
-
-### pantheon-module-report
-
-Get a list of which sites use which version of a module.
-
-### pantheon-sites-report
-
-Get a metric about all sites (e.g. PHP version, or Upstream).
-
-### pantheon-offboard
-
-Offboard a staff member from your organization.
-
-### pantheon-deploy
-
-Deploy dev->test or test->live.
-
-### pantheon-drupal-status-report
-
-Report a summary of the Status Report for every Drupal site.
+### Accounts
+| Command | Description |
+|--|--|
+| `pantheon-sites-accounts-rename` | Iterate over all a given list of sites and rename usernames/email addresses |
+| `pantheon-offboard` | Offboard a staff member from your organization |
