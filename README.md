@@ -52,9 +52,6 @@ The script will ask you questions along the way (and give you hints when there's
 | `pantheon-quick-deploy` | Quickly deploy something from dev->test->live |
 | `pantheon-commit-and-quick-deploy` | Commit any local changes and then deploy them |
 | `pantheon-deploy` | Deploy dev->test or test->live |
-| `pantheon-check-undeployed` | Check for undeployed code before merging/deploying |
-| `pantheon-commit` | Commit code |
-
 
 ### Report
 | Command | Description |
@@ -79,22 +76,10 @@ The script will ask you questions along the way (and give you hints when there's
 |--|--|
 | `pantheon-multidev-create` | Create a new multi-dev environment |
 | `pantheon-multidev-merge` | Merge a multi-dev environment into master (the dev environment) |
-| `pantheon-multidev-delete` | Delete the multi-dev |
-| `pantheon-get-multidev-url` | Get the framework for the given site |
-| `pantheon-env-merge` | Merge one environment to another |
-| `pantheon-script-colours` | Sets colour variables used throughout other scripts |
-| `pantheon-get-framework` | Get the framework for the given site |
-| `pantheon-terminus-version` | Checks Terminus version |
-| `pantheon-terminus-check` | Checks that Terminus is installed |
-| `pantheon-error-no-cleanup` | If there is an error, it is displayed without clearing anything |
-| `pantheon-connection-mode` | Set the connection mode for the env |
 | `pantheon-move-domains` | Move custom domains from one site to another |
-| `pantheon-choose-site` | |
-| `speak-message` | |
 
 ### Accounts
 | Command | Description |
 |--|--|
 | `pantheon-sites-accounts-rename` | Iterate over all a given list of sites and rename usernames/email addresses |
-| `pantheon-authenticate` | Authenticate with Terminus |
 | `pantheon-offboard` | Offboard a staff member from your organization |
