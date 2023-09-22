@@ -12,7 +12,6 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-multidev-merge"
 . "$DIR/functions/pantheon-multidev-delete"
 . "$DIR/functions/drupal/drupal-check-features"
-. "$DIR/functions/drupal8/drupal8-check-config-management"
 
 #set -x
 
