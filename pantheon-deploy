@@ -54,12 +54,6 @@ case $FRAMEWORK in
     drupal_check_features "$SITENAME" "$SOURCEENV"
     hasfeatures=$?
     ;;
-
-  drupal8)
-    drupal8_check_config_management "$SITENAME" "$SOURCEENV"
-    hasconfigmanagement=$?
-    ;;
-
   *)
     echo -e "This script has no configuration management automation for $FRAMEWORK.  Unless this site has Quicksilver configured, you should probably just do everything manually."
     ;;
