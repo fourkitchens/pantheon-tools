@@ -12,7 +12,6 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-script-colours"
 . "$DIR/functions/pantheon-terminus-check"
 . "$DIR/functions/drupal/drupal-check-features"
-. "$DIR/functions/drupal8/drupal8-check-config-management"
 
 # Uncomment for debugging.
 #set -x
@@ -37,11 +36,6 @@ case $FRAMEWORK in
   drupal)
     drupal_check_features "$SITENAME" "$MULTIDEV"
     ;;
-
-  drupal8)
-    drupal8_check_config_management "$SITENAME" "$MULTIDEV"
-    ;;
-
 esac
 
 URL=''

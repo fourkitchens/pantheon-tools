@@ -12,7 +12,6 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/functions/pantheon-multidev-merge"
 . "$DIR/functions/pantheon-multidev-delete"
 . "$DIR/functions/drupal/drupal-check-features"
-. "$DIR/functions/drupal8/drupal8-check-config-management"
 
 #set -x
 
@@ -38,12 +37,6 @@ case $FRAMEWORK in
     drupal_check_features "$SITENAME" "$MULTIDEV"
     hasfeatures=$?
     ;;
-
-  drupal8)
-    drupal8_check_config_management "$SITENAME" "$MULTIDEV"
-    hasconfigmanagement=$?
-    ;;
-
   *)
     echo -e "This script has no configuration management automation for $FRAMEWORK.  Unless this site has Quicksilver configured, you should probably just do everything manually."
     ;;
